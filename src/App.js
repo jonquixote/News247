@@ -88,7 +88,6 @@ const newsArticles = [
 ];
 
 const carouselImages = [
-  newsVideo1,
   carousel1,
   carousel3,
   carousel4,
@@ -120,6 +119,7 @@ const NewsApp = () => {
   const featuredArticles = newsArticles.slice(0, 3);
   const remainingArticles = newsArticles.slice(3);
 
+
   return (
     <div className="min-h-screen flex flex-col">
       <nav className="sticky top-0 bg-white border-b border-gray-200 z-10">
@@ -147,7 +147,7 @@ const NewsApp = () => {
         </div>
       </nav>
       
-      <main className="flex-grow container mx-auto p-4">
+      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Featured Articles Section */}
         <section className="mb-12">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -179,6 +179,25 @@ const NewsApp = () => {
                   />
                 </Card>
               ))}
+            </div>
+          </div>
+        </section>
+
+
+        {/* Home Page Memes Section */}
+        <section className="my-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="md:col-span-2 h-[400px]"> {/* Fixed height */}
+              <ImageCarouselCard
+                title="Memes of the Day"
+                images={carouselImages}
+              />
+            </div>
+            <div className="h-[400px]"> {/* Fixed height */}
+              <VideoCard
+                title="GPT Speaks Jamaican Patois"
+                videoSrc={newsVideo3}
+              />
             </div>
           </div>
         </section>

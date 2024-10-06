@@ -1,11 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Card, CardContent, CardFooter, CardHeader } from "./card";
-import { Button } from "./button";
+import { Card } from './card';
 import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
 
 const VideoCard = ({ title, videoSrc }) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
   const [error, setError] = useState(null);
   const videoRef = useRef(null);
 
@@ -26,32 +25,25 @@ const VideoCard = ({ title, videoSrc }) => {
 
   const togglePlay = () => {
     if (videoRef.current.paused) {
-      videoRef.current.play().then(() => {
-        setIsPlaying(true);
-        console.log("Video started playing");
-      }).catch(error => {
-        console.error("Error playing video:", error);
-        setError("Error playing video. Please try again.");
-      });
+      videoRef.current.play();
+      setIsPlaying(true);
     } else {
       videoRef.current.pause();
       setIsPlaying(false);
-      console.log("Video paused");
     }
   };
 
   const toggleMute = () => {
-    videoRef.current.muted = !videoRef.current.muted;
     setIsMuted(!isMuted);
-    console.log("Mute toggled:", videoRef.current.muted);
+    videoRef.current.muted = !videoRef.current.muted;
   };
 
   return (
-    <Card className="overflow-hidden">
-      <CardHeader>
-        <h2 className="text-xl font-semibold">{title}</h2>
-      </CardHeader>
-      <CardContent className="p-0 relative">
+    <Card className="overflow-hidden relative h-full">
+      <div className="relative h-full">
+        <div className="absolute top-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 z-10">
+          <h2 className="text-xl font-semibold">{title}</h2>
+        </div>
         {error ? (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
             <strong className="font-bold">Error:</strong>
@@ -61,37 +53,45 @@ const VideoCard = ({ title, videoSrc }) => {
           <>
             <video
               ref={videoRef}
-              className="w-full"
+              className="w-full h-full object-cover"
               src={videoSrc}
               muted={isMuted}
-              onClick={togglePlay}
+              loop
+              playsInline
             >
               Your browser does not support the video tag.
             </video>
             {!isPlaying && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                <Button 
+              <button
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-4 hover:bg-opacity-75 transition-all"
+                onClick={togglePlay}
+              >
+                <Play className="h-12 w-12" />
+              </button>
+            )}
+            {isPlaying && (
+              <div className="absolute bottom-2 left-2 right-2 flex justify-between items-center">
+                <button
+                  className="bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75 transition-all"
                   onClick={togglePlay}
-                  className="bg-white text-black hover:bg-gray-200"
                 >
-                  <Play className="h-6 w-6 mr-2" />
-                  Play Video
-                </Button>
+                  <Pause className="h-6 w-6" />
+                </button>
+                <button
+                  className="bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75 transition-all"
+                  onClick={toggleMute}
+                >
+                  {isMuted ? (
+                    <VolumeX className="h-6 w-6" />
+                  ) : (
+                    <Volume2 className="h-6 w-6" />
+                  )}
+                </button>
               </div>
             )}
           </>
         )}
-      </CardContent>
-      <CardFooter className="flex justify-between items-center bg-gray-50">
-        <Button variant="ghost" onClick={togglePlay}>
-          {isPlaying ? <Pause className="h-4 w-4 mr-2" /> : <Play className="h-4 w-4 mr-2" />}
-          {isPlaying ? 'Pause' : 'Play'}
-        </Button>
-        <Button variant="ghost" onClick={toggleMute}>
-          {isMuted ? <VolumeX className="h-4 w-4 mr-2" /> : <Volume2 className="h-4 w-4 mr-2" />}
-          {isMuted ? 'Unmute' : 'Mute'}
-        </Button>
-      </CardFooter>
+      </div>
     </Card>
   );
 };

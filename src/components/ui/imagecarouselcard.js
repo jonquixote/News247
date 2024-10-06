@@ -15,37 +15,34 @@ const ImageCarouselCard = ({ title, images }) => {
   };
 
   return (
-    <Card className="overflow-hidden">
-      <CardHeader>
+    <Card className="overflow-hidden flex flex-col h-full">
+      <CardHeader className="flex-shrink-0">
         <h2 className="text-xl font-semibold">{title}</h2>
       </CardHeader>
-      <CardContent className="p-0 relative">
-        <div className="relative h-[500px]">
-          {images.map((image, index) => (
+      <CardContent className="p-0 relative flex-grow">
+        <div className="relative w-full h-full bg-gray-100">
+          <div className="absolute inset-0 flex items-center justify-center">
             <img
-              key={index}
-              src={image}
-              alt={`Carousel image ${index + 1}`}
-              className={`absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-300 ${
-                index === currentImageIndex ? 'opacity-100' : 'opacity-0'
-              }`}
+              src={images[currentImageIndex]}
+              alt={`Carousel image ${currentImageIndex + 1}`}
+              className="max-w-full max-h-full object-contain"
             />
-          ))}
+          </div>
+          <Button
+            variant="ghost"
+            className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-white bg-opacity-50 hover:bg-opacity-75"
+            onClick={prevImage}
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </Button>
+          <Button
+            variant="ghost"
+            className="absolute top-1/2 right-2 transform -translate-y-1/2 bg-white bg-opacity-50 hover:bg-opacity-75"
+            onClick={nextImage}
+          >
+            <ChevronRight className="h-6 w-6" />
+          </Button>
         </div>
-        <Button
-          variant="ghost"
-          className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-white bg-opacity-50 hover:bg-opacity-75"
-          onClick={prevImage}
-        >
-          <ChevronLeft className="h-6 w-6" />
-        </Button>
-        <Button
-          variant="ghost"
-          className="absolute top-1/2 right-2 transform -translate-y-1/2 bg-white bg-opacity-50 hover:bg-opacity-75"
-          onClick={nextImage}
-        >
-          <ChevronRight className="h-6 w-6" />
-        </Button>
       </CardContent>
     </Card>
   );
