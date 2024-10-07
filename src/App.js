@@ -122,7 +122,7 @@ const NewsApp = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <nav className="sticky top-0 bg-white border-b border-gray-200 z-10">
+      <nav className="sticky top-0 bg-white border-b border-gray-200 shadow-sm z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex-shrink-0 flex items-center">
@@ -147,15 +147,15 @@ const NewsApp = () => {
         </div>
       </nav>
       
-      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8">
+      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 pt-4">
         {/* Featured Articles Section */}
         <section className="mb-12">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2">
               <Card className="h-full overflow-hidden rounded-lg relative cursor-pointer" onClick={() => openArticle(featuredArticles[0])}>
                 <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black to-transparent text-white z-10">
-                  <h2 className="text-7xl font-bold mb-2">{featuredArticles[0].title}</h2>
-                  <p className="text-lg mb-2">{featuredArticles[0].tagline}</p>
+                  <h2 className="text-7xl xs:text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-8xl font-bold mb-2">{featuredArticles[0].title}</h2>
+                  <p className="text-xs lg:text-sm xl:text-sm mb-2">{featuredArticles[0].tagline}</p>
                   <p className="text-xs">By {featuredArticles[0].author}</p>
                 </div>
                 <img 
@@ -169,7 +169,7 @@ const NewsApp = () => {
               {featuredArticles.slice(1, 3).map((article) => (
                 <Card key={article.id} className="h-[calc(50%-0.75rem)] overflow-hidden rounded-lg relative cursor-pointer" onClick={() => openArticle(article)}>
                   <div className="absolute bottom-0 left-0 p-4 bg-gradient-to-t from-black to-transparent text-white z-10 w-full">
-                    <h3 className="text-xl font-semibold mb-1">{article.title}</h3>
+                    <h3 className="text-4xl xs:text-3xl sm:text-4xl md:text-lg lg:text-3xl xl:text-4xl md:text-base font-semibold mb-1">{article.title}</h3>
                     <p className="text-xs">{article.tagline}</p>
                   </div>
                   <img 
