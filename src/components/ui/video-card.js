@@ -23,14 +23,14 @@ const VideoCard = ({ title, videoSrc }) => {
         video.currentTime = 0; // Go to the first frame
       });
 
-      video.addEventListener('error', (e) => {
-        console.error("Video error:", e);
-        setError("Error loading video. Please check the video source.");
-      });
-
       video.addEventListener('seeked', () => {
         // Draw the current frame on the canvas when seeked
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      });
+
+      video.addEventListener('error', (e) => {
+        console.error("Video error:", e);
+        setError("Error loading video. Please check the video source.");
       });
     }
 
