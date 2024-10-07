@@ -49,6 +49,7 @@ const newsArticles = [
     content: "Video",
     author: "Johnny", 
     date: "2024-10-05",
+    image: newsVideo3,
     video: newsVideo3
   },
   { 
@@ -67,6 +68,7 @@ const newsArticles = [
     content: "Video",
     author: "Johnny", 
     date: "2024-10-04",
+    image: newsVideo2,
     video: newsVideo2
   },
   { 
@@ -179,7 +181,7 @@ const NewsApp = () => {
               </Card>
             </div>
             {/* Stacked Featured Articles Section */}
-            <Card className="md:h-full flex flex-col overflow-hidden">
+            <Card className="h-[300px] md:h-auto flex flex-col overflow-hidden">
               {stackedFeaturedArticles.map((article, index) => (
                 <div 
                   key={article.id} 
@@ -188,24 +190,13 @@ const NewsApp = () => {
                   }`}
                   onClick={() => openArticle(article)}
                 >
-                  <div className="flex h-full">
+                  <div className="flex h-full"> {/* Use full height for the flex container */}
                     <div className="w-1/3">
-                      {article.content === "Video" ? (
-                        <video 
-                          src={article.video} 
-                          alt={article.title} 
-                          className="w-full h-full object-cover"
-                          muted 
-                          autoPlay 
-                          loop 
-                        />
-                      ) : (
-                        <img 
-                          src={article.image} 
-                          alt={article.title} 
-                          className="w-full h-full object-cover"
-                        />
-                      )}
+                      <img 
+                        src={article.image} 
+                        alt={article.title} 
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                     <div className="w-2/3 p-2 flex flex-col justify-center">
                       <h3 className="text-sm font-semibold mb-1 line-clamp-2">{article.title}</h3>
