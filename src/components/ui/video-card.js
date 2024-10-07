@@ -7,8 +7,9 @@ const VideoCard = ({ title, videoSrc }) => {
   const [isMuted, setIsMuted] = useState(false);
   const [error, setError] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const videoRef = useRef(null);
-  const fullscreenVideoRef = useRef(null);
+  const containerRef = useRef(null);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -48,56 +49,44 @@ const VideoCard = ({ title, videoSrc }) => {
     videoRef.current.muted = !videoRef.current.muted;
   };
 
-  const openFullscreenVideo = () => {
-    if (fullscreenVideoRef.current) {
-      fullscreenVideoRef.current.src = videoSrc;
-      fullscreenVideoRef.current.style.display = 'block';
-      if (fullscreenVideoRef.current.requestFullscreen) {
-        fullscreenVideoRef.current.requestFullscreen();
-      } else if (fullscreenVideoRef.current.webkitRequestFullscreen) {
-        fullscreenVideoRef.current.webkitRequestFullscreen();
-      } else if (fullscreenVideoRef.current.msRequestFullscreen) {
-        fullscreenVideoRef.current.msRequestFullscreen();
-      }
-      fullscreenVideoRef.current.play();
-    }
-  };
-
-  const closeFullscreenVideo = () => {
-    if (fullscreenVideoRef.current) {
-      fullscreenVideoRef.current.pause();
-      fullscreenVideoRef.current.style.display = 'none';
-      fullscreenVideoRef.current.src = '';
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      } else if (document.webkitExitFullscreen) {
-        document.webkitExitFullscreen();
-      } else if (document.msExitFullscreen) {
-        document.msExitFullscreen();
+  const enterFullscreen = () => {
+    const video = videoRef.current;
+    if (video) {
+      if (video.requestFullscreen) {
+        video.requestFullscreen();
+      } else if (video.webkitRequestFullscreen) {
+        video.webkitRequestFullscreen();
+      } else if (video.msRequestFullscreen) {
+        video.msRequestFullscreen();
       }
     }
   };
 
   useEffect(() => {
     const handleFullscreenChange = () => {
-      if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
-        closeFullscreenVideo();
-      }
+      setIsFullscreen(
+        !!(document.fullscreenElement ||
+           document.webkitFullscreenElement ||
+           document.mozFullScreenElement ||
+           document.msFullscreenElement)
+      );
     };
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-    document.addEventListener('msfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
 
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
       document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
-      document.removeEventListener('msfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
     };
   }, []);
 
   return (
-    <Card className="overflow-hidden relative h-full">
+    <Card className="overflow-hidden relative h-full" ref={containerRef}>
       <div className="relative h-full">
         <div className="absolute top-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 z-10">
           <h2 className="text-xl font-semibold">{title}</h2>
@@ -111,7 +100,7 @@ const VideoCard = ({ title, videoSrc }) => {
           <>
             <video
               ref={videoRef}
-              className="w-full h-full object-cover"
+              className={`${isFullscreen ? '' : 'w-full h-full object-cover'}`}
               src={videoSrc}
               muted={isMuted}
               loop
@@ -122,16 +111,8 @@ const VideoCard = ({ title, videoSrc }) => {
                 videoRef.current.currentTime = 0;
               }}
               style={{ display: isLoaded ? 'block' : 'none' }}
-              onClick={pauseVideo}
-            >
-              Your browser does not support the video tag.
-            </video>
-            <video
-              ref={fullscreenVideoRef}
-              className="hidden fixed inset-0 w-full h-full z-50 bg-black"
-              playsInline
-              preload="none"
-              onClick={closeFullscreenVideo}
+              onClick={isFullscreen ? undefined : pauseVideo}
+              controls={isFullscreen}
             >
               Your browser does not support the video tag.
             </video>
@@ -140,7 +121,7 @@ const VideoCard = ({ title, videoSrc }) => {
                 <span className="text-gray-500">Loading video...</span>
               </div>
             )}
-            {!isPlaying && isLoaded && (
+            {!isPlaying && isLoaded && !isFullscreen && (
               <button
                 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-4 hover:bg-opacity-75 transition-all"
                 onClick={playVideo}
@@ -148,7 +129,7 @@ const VideoCard = ({ title, videoSrc }) => {
                 <Play className="h-12 w-12" />
               </button>
             )}
-            {isLoaded && (
+            {isLoaded && !isFullscreen && (
               <div className="absolute bottom-2 left-2 right-2 flex justify-between items-center">
                 {isPlaying ? (
                   <button
@@ -173,7 +154,7 @@ const VideoCard = ({ title, videoSrc }) => {
                   </button>
                   <button
                     className="bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75 transition-all"
-                    onClick={openFullscreenVideo}
+                    onClick={enterFullscreen}
                   >
                     <Maximize className="h-6 w-6" />
                   </button>
