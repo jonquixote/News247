@@ -14,7 +14,7 @@ import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
 import './styles/globals.css'
 import newsImage1 from './media/newsImage1.png';
 import newsImage2 from './media/newsImage2.jpg';
-import newsImage3 from './media/newsImage3.jpeg';
+import newsImage3 from './media/newsImage3.jpg';
 import newsImage4 from './media/newsImage4.jpg';
 import newsImage5 from './media/newsImage5.jpg';
 import newsImage6 from './media/newsImage6.jpg';
@@ -49,7 +49,7 @@ const newsArticles = [
     content: "Video",
     author: "Johnny", 
     date: "2024-10-05",
-    image: newsVideo3,
+    image: newsImage3,
     video: newsVideo3
   },
   { 
@@ -68,7 +68,7 @@ const newsArticles = [
     content: "Video",
     author: "Johnny", 
     date: "2024-10-04",
-    image: newsVideo2,
+    image: newsImage4,
     video: newsVideo2
   },
   { 
@@ -273,7 +273,7 @@ const NewsApp = () => {
         {selectedArticle && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
             <div className="bg-white p-6 rounded-lg max-w-4xl w-full h-screen flex flex-col relative"> 
-              <button onClick={closeArticle} className="sticky top-4 right-4 z-10 py-2"> 
+              <button onClick={closeArticle} className="sticky top-4 right-4 z-10 py-4"> 
                 <X className="h-6 w-6 text-gray-600" />
               </button>
               <div className="flex-grow overflow-y-auto"> 
