@@ -59,10 +59,10 @@ const VideoCard = ({ title, videoSrc }) => {
               loop
               playsInline
               preload="auto" // Preload the video to show the first frame
-              onLoadedMetadata={() => {
+              onCanPlay={() => {
                 videoRef.current.currentTime = 0; // Ensure the first frame is displayed
               }}
-              style={{ display: 'block' }} // Ensure the video is displayed
+              style={{ display: isPlaying ? 'block' : 'block' }} // Ensure the video is displayed
             >
               Your browser does not support the video tag.
             </video>
