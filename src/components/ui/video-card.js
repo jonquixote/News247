@@ -7,33 +7,15 @@ const VideoCard = ({ title, videoSrc }) => {
   const [isMuted, setIsMuted] = useState(true);
   const [error, setError] = useState(null);
   const videoRef = useRef(null);
-  const canvasRef = useRef(null);
 
   useEffect(() => {
     const video = videoRef.current;
-    const canvas = canvasRef.current;
-    const context = canvas.getContext('2d');
-
     if (video) {
-      video.addEventListener('loadedmetadata', () => {
-        // Set canvas dimensions to match video
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        // Draw the first frame of the video onto the canvas
-        video.currentTime = 0; // Go to the first frame
-      });
-
-      video.addEventListener('seeked', () => {
-        // Draw the current frame on the canvas when seeked
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-      });
-
       video.addEventListener('error', (e) => {
         console.error("Video error:", e);
         setError("Error loading video. Please check the video source.");
       });
     }
-
     return () => {
       if (video) {
         video.removeEventListener('error', () => {});
@@ -69,7 +51,6 @@ const VideoCard = ({ title, videoSrc }) => {
           </div>
         ) : (
           <>
-            <canvas ref={canvasRef} className="w-full h-full object-cover" style={{ display: isPlaying ? 'none' : 'block' }} />
             <video
               ref={videoRef}
               className="w-full h-full object-cover"
@@ -78,7 +59,10 @@ const VideoCard = ({ title, videoSrc }) => {
               loop
               playsInline
               preload="auto" // Preload the video to show the first frame
-              style={{ display: isPlaying ? 'block' : 'none' }} // Hide video when not playing
+              onLoadedData={() => {
+                videoRef.current.currentTime = 0; // Ensure the first frame is displayed
+              }}
+              style={{ display: 'block' }} // Ensure the video is displayed
             >
               Your browser does not support the video tag.
             </video>
