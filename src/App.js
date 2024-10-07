@@ -154,9 +154,9 @@ const NewsApp = () => {
             <div className="md:col-span-2">
               <Card className="h-full overflow-hidden rounded-lg relative cursor-pointer" onClick={() => openArticle(featuredArticles[0])}>
                 <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black to-transparent text-white z-10">
-                  <h2 className="text-7xl xs:text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-8xl font-bold mb-2">{featuredArticles[0].title}</h2>
+                  <h2 className="text-7xl xs:text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-8xl font-bold mb-2">{featuredArticles[0].title}</h2>
                   <p className="text-xs lg:text-sm xl:text-sm mb-2">{featuredArticles[0].tagline}</p>
-                  <p className="text-xs">By {featuredArticles[0].author}</p>
+                  {/* <p className="text-xs">By {featuredArticles[0].author}</p> */}
                 </div>
                 <img 
                   src={featuredArticles[0].image} 
