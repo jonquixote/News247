@@ -37,7 +37,7 @@ const newsArticles = [
     tagline: "Exploring the limitations of artificial intelligence",
     content: "Artificial intelligence is both exciting and concerning. We hope it will solve our problems, but fear it may be based on a flawed understanding of how humans think and use language. Programs like ChatGPT are impressive, generating human-like text from massive datasets. However, they are far from achieving true intelligence. These programs rely on statistical pattern matching, fundamentally different from human reasoning. This limits their capabilities and creates inherent flaws. Unlike humans, who form explanations and understand cause and effect, these programs simply describe and predict.\n\n\nA young child effortlessly learns complex grammar from minimal data, demonstrating an innate understanding of language structure.  Machine learning programs lack this innate ability, relying instead on brute-force memorization. Critically, they cannot grasp counterfactuals – statements about what is not the case and what could be. True intelligence lies in explaining why things happen, not just predicting what will happen.  Imagine observing a falling apple.  'The apple falls' is a description. The apple will fall if I let go' is a prediction. But true understanding is explaining why it falls, invoking gravity or the curvature of spacetime. Machine learning programs also struggle with moral reasoning. They either overgenerate (producing both ethical and unethical outputs) or undergenerate (remaining indifferent to moral considerations). This is because they cannot reason from ethical principles. ChatGPT exhibits a kind of 'banality of evil':  plagiarism, apathy, and the avoidance of responsibility.  It summarizes existing arguments without taking a stand, pleading not ignorance, but a lack of intelligence.  Ultimately, it offers a 'just following orders' defense, shifting responsibility to its creators. This reveals the difficulty in balancing creativity with ethical constraints in machine learning.  These programs either produce both truths and falsehoods, endorsing ethical and unethical decisions alike, or they remain noncommittal and indifferent. While machine learning has its uses, it falls short of true intelligence.  Its limitations in understanding language, explaining causality, and reasoning morally raise concerns about its potential impact on science and ethics.  We must be mindful of these shortcomings and strive for AI that truly reflects human intelligence, capable of both creativity and moral responsibility.",
     author: "Johnny", 
-    date: "2024-10-04",
+    date: "2024-10-06",
     image: newsImage2
   },
   { 
@@ -55,7 +55,7 @@ const newsArticles = [
     tagline: "World leaders gather to address climate crisis",
     content: "World leaders gather to discuss urgent climate action at the annual Global Climate Summit. The week-long event will focus on strategies to reduce carbon emissions, promote renewable energy, and mitigate the impacts of climate change. Experts hope this summit will lead to concrete commitments and actionable plans.\n\nThe summit, held virtually due to ongoing pandemic concerns, brings together heads of state, climate scientists, and environmental activists from over 190 countries. Key topics on the agenda include accelerating the transition to clean energy, protecting biodiversity, and financing climate adaptation in developing nations.\n\nUN Secretary-General António Guterres opened the summit with a stark warning: 'We are at a crucial crossroads. The decisions we make today will shape the future of our planet for generations to come. We must act now, and we must act together.'",
     author: "Johnny", 
-    date: "2024-10-02",
+    date: "2024-10-03",
     image: newsImage3
   },
   { 
@@ -64,7 +64,7 @@ const newsArticles = [
     tagline: "Innovations reshaping our sustainable future",
     content: "The renewable energy sector is experiencing a revolution. From advanced solar panels that can generate electricity even on cloudy days to wind turbines that can harness energy from the slightest breeze, the innovations are remarkable. Scientists are also making strides in energy storage, developing new battery technologies that can store surplus energy for use during peak demand periods. Moreover, tidal and geothermal energy are becoming increasingly viable options, expanding our renewable energy portfolio.\n\n...",
     author: "Dr. Johnny", 
-    date: "2024-10-05",
+    date: "2024-10-02",
     image: newsImage4
   },
   { 
@@ -73,7 +73,7 @@ const newsArticles = [
     tagline: "Urban agriculture reaches new heights",
     content: "Vertical farming is transforming agriculture as we know it. These innovative farms, often housed in repurposed urban buildings, are capable of producing fresh produce year-round, regardless of outdoor conditions. By using hydroponic or aeroponic systems, vertical farms can grow crops with 70% less water than traditional farming methods. They also significantly reduce the need for pesticides and eliminate the carbon footprint associated with transporting produce over long distances.\n\n...",
     author: "Johnny", 
-    date: "2024-10-06",
+    date: "2024-10-01",
     image: newsImage5
   },
   { 
@@ -82,7 +82,7 @@ const newsArticles = [
     tagline: "Unlocking unprecedented computational power",
     content: "Quantum computing is on the brink of a major breakthrough. Recent advancements have allowed researchers to create quantum processors with over 100 qubits, bringing us closer to quantum supremacy - the point at which quantum computers can solve problems that classical computers practically cannot. These powerful machines have the potential to revolutionize fields such as cryptography, drug discovery, and complex system modeling.\n\n...",
     author: "Dr. Johnny", 
-    date: "2024-10-07",
+    date: "2024-10-01",
     image: newsImage6
   },
 ];
@@ -116,9 +116,8 @@ const NewsApp = () => {
     }
   };
 
-  const featuredArticles = newsArticles.slice(0, 3);
-  const remainingArticles = newsArticles.slice(3);
-
+  const mainFeaturedArticle = newsArticles[0];
+  const stackedFeaturedArticles = newsArticles.slice(1, 4);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -147,55 +146,64 @@ const NewsApp = () => {
         </div>
       </nav>
       
-      <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+      <main className="flex-grow container mx-auto px-4 py-8">
         {/* Featured Articles Section */}
         <section className="mb-12">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2">
-              <Card className="h-full overflow-hidden rounded-lg relative cursor-pointer" onClick={() => openArticle(featuredArticles[0])}>
+              <Card className="h-full overflow-hidden rounded-lg relative cursor-pointer" onClick={() => openArticle(mainFeaturedArticle)}>
                 <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black to-transparent text-white z-10">
-                  <h2 className="text-5xl xs:text-3xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-8xl font-bold mb-2">{featuredArticles[0].title}</h2>
-                  <p className="text-xs lg:text-sm xl:text-sm mb-2">{featuredArticles[0].tagline}</p>
+                  <h2 className="text-5xl xs:text-3xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-8xl font-bold mb-2">{mainFeaturedArticle.title}</h2>
+                  <p className="text-xs lg:text-sm xl:text-sm mb-2">{mainFeaturedArticle.tagline}</p>
                 </div>
                 <img 
-                  src={featuredArticles[0].image} 
-                  alt={featuredArticles[0].title} 
+                  src={mainFeaturedArticle.image} 
+                  alt={mainFeaturedArticle.title} 
                   className="w-full h-full object-cover"
                 />
               </Card>
             </div>
-            <div className="space-y-6">
-              {featuredArticles.slice(1, 3).map((article) => (
-                <Card key={article.id} className="h-[calc(50%-0.75rem)] overflow-hidden rounded-lg relative cursor-pointer" onClick={() => openArticle(article)}>
-                  <div className="absolute bottom-0 left-0 p-4 bg-gradient-to-t from-black to-transparent text-white z-10 w-full">
-                    <h3 className="text-4xl xs:text-3xl sm:text-4xl md:text-lg lg:text-3xl xl:text-4xl md:text-base font-semibold mb-1">{article.title}</h3>
-                    <p className="text-xs">{article.tagline}</p>
+            <Card className="md:h-full flex flex-col overflow-hidden">
+              {stackedFeaturedArticles.map((article, index) => (
+                <div 
+                  key={article.id} 
+                  className={`flex-1 overflow-hidden cursor-pointer ${
+                    index !== stackedFeaturedArticles.length - 1 ? 'border-b border-gray-200' : ''
+                  }`}
+                  onClick={() => openArticle(article)}
+                >
+                  <div className="flex h-full">
+                    <div className="w-1/3">
+                      <img 
+                        src={article.image} 
+                        alt={article.title} 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="w-2/3 p-2 flex flex-col justify-center">
+                      <h3 className="text-sm font-semibold mb-1 line-clamp-2">{article.title}</h3>
+                      <p className="text-xs text-gray-500">By {article.author}</p>
+                    </div>
                   </div>
-                  <img 
-                    src={article.image} 
-                    alt={article.title} 
-                    className="w-full h-full object-cover"
-                  />
-                </Card>
+                </div>
               ))}
-            </div>
+            </Card>
           </div>
         </section>
-
 
         {/* Home Page Memes Section */}
         <section className="my-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="md:col-span-2 h-[400px]"> {/* Fixed height */}
-              <ImageCarouselCard
-                title="Memes of the Day"
-                images={carouselImages}
-              />
-            </div>
             <div className="h-[400px]"> {/* Fixed height */}
               <VideoCard
                 title="GPT Speaks Jamaican Patois"
                 videoSrc={newsVideo3}
+              />
+            </div>
+            <div className="md:col-span-2 h-[400px]"> {/* Fixed height */}
+              <ImageCarouselCard
+                title="Memes of the Day"
+                images={carouselImages}
               />
             </div>
           </div>
@@ -205,7 +213,7 @@ const NewsApp = () => {
         <section>
           <h2 className="text-2xl font-semibold mb-4">More News</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {remainingArticles.map((item) => (
+            {newsArticles.slice(4).map((item) => (
               <Card key={item.id} className="overflow-hidden rounded-lg flex flex-col h-[400px]">
                 <div className="relative h-2/3 cursor-pointer" onClick={() => openArticle(item)}>
                   <img 

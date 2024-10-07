@@ -1,49 +1,50 @@
 import React, { useState } from 'react';
-import { Card, CardHeader, CardContent } from './card';
-import { Button } from './button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Card } from './card'; // Adjust the import based on your structure
+import { ChevronLeft, ChevronRight } from 'lucide-react'; // Import arrow icons
+import { useSwipeable } from 'react-swipeable';
 
 const ImageCarouselCard = ({ title, images }) => {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   const nextImage = () => {
-    setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
   };
 
   const prevImage = () => {
-    setCurrentImageIndex((prevIndex) => (prevIndex - 1 + images.length) % images.length);
+    setCurrentIndex((prevIndex) => (prevIndex - 1 + images.length) % images.length);
   };
 
+  const handlers = useSwipeable({
+    onSwipedLeft: nextImage,
+    onSwipedRight: prevImage,
+    preventDefaultTouchmoveEvent: true,
+    trackMouse: true,
+  });
+
   return (
-    <Card className="overflow-hidden flex flex-col h-full">
-      <CardHeader className="flex-shrink-0">
-        <h2 className="text-xl font-semibold">{title}</h2>
-      </CardHeader>
-      <CardContent className="p-0 relative flex-grow">
-        <div className="relative w-full h-full bg-gray-100">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <img
-              src={images[currentImageIndex]}
-              alt={`Carousel image ${currentImageIndex + 1}`}
-              className="max-w-full max-h-full object-contain"
-            />
-          </div>
-          <Button
-            variant="ghost"
-            className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-white bg-opacity-50 hover:bg-opacity-75"
-            onClick={prevImage}
-          >
+    <Card className="overflow-hidden rounded-lg relative h-full"> {/* Ensure full height */}
+      <div className="absolute top-0 left-0 right-0 p-2 bg-black bg-opacity-20 text-white z-10"> {/* More translucent background */}
+        <h2 className="text-sm font-bold">{title}</h2> {/* Reduced header size to half */}
+      </div>
+      <div className="relative bg-gray-900 h-full"> {/* Set height to full */}
+        <div className="flex items-center justify-between h-full"> {/* Ensure full height for flex container */}
+          <button onClick={prevImage} className="absolute left-0 z-10 p-2 text-white bg-black bg-opacity-50 rounded-full hover:bg-opacity-75">
             <ChevronLeft className="h-6 w-6" />
-          </Button>
-          <Button
-            variant="ghost"
-            className="absolute top-1/2 right-2 transform -translate-y-1/2 bg-white bg-opacity-50 hover:bg-opacity-75"
-            onClick={nextImage}
-          >
+          </button>
+          <div className="flex overflow-hidden h-full"> {/* Ensure overflow container takes full height */}
+            <div className="flex-shrink-0 w-full h-full"> {/* Full height for image container */}
+              <img 
+                src={images[currentIndex]} 
+                alt={`Carousel image ${currentIndex + 1}`} 
+                className="w-full h-full object-contain" 
+              />
+            </div>
+          </div>
+          <button onClick={nextImage} className="absolute right-0 z-10 p-2 text-white bg-black bg-opacity-50 rounded-full hover:bg-opacity-75">
             <ChevronRight className="h-6 w-6" />
-          </Button>
+          </button>
         </div>
-      </CardContent>
+      </div>
     </Card>
   );
 };
