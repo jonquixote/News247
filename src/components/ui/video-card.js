@@ -54,9 +54,11 @@ const VideoCard = ({ title, videoSrc }) => {
     if (video) {
       if (video.requestFullscreen) {
         video.requestFullscreen();
-      } else if (video.webkitRequestFullscreen) {
+      } else if (video.webkitRequestFullscreen) { // iOS Safari
         video.webkitRequestFullscreen();
-      } else if (video.msRequestFullscreen) {
+      } else if (video.webkitEnterFullscreen) { // iOS Safari
+        video.webkitEnterFullscreen();
+      } else if (video.msRequestFullscreen) { // IE11
         video.msRequestFullscreen();
       }
     }
