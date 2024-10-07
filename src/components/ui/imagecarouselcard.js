@@ -22,7 +22,7 @@ const ImageCarouselCard = ({ title, images }) => {
   });
 
   return (
-    <Card className="overflow-hidden rounded-lg relative h-full"> {/* Ensure full height */}
+    <Card className="overflow-hidden rounded-lg relative h-full" {...handlers}> {/* Ensure full height */}
       <div className="absolute top-0 left-0 right-0 p-2 bg-black bg-opacity-20 text-white z-10"> {/* More translucent background */}
         <h2 className="text-sm font-bold">{title}</h2> {/* Reduced header size to half */}
       </div>
