@@ -59,7 +59,7 @@ const VideoCard = ({ title, videoSrc }) => {
               loop
               playsInline
               preload="auto" // Preload the video to show the first frame
-              onCanPlayThrough={() => {
+              onLoadedData={() => {
                 videoRef.current.currentTime = 0; // Ensure the first frame is displayed
               }}
               style={{ display: 'block' }} // Ensure the video is displayed
