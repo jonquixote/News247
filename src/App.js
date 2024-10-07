@@ -209,6 +209,12 @@ const NewsApp = () => {
           </div>
         </section>
 
+        
+        <VideoCard 
+            title="Video Of The Day" 
+            videoSrc={newsVideo2}
+          />
+
         {/* Remaining Articles Section */}
         <section className="mt-6">
           <h2 className="text-2xl font-semibold mb-4">More News</h2>
@@ -259,19 +265,6 @@ const NewsApp = () => {
             </div>
           </div>
         )}
-
-        <br></br>
-        <VideoCard 
-            title="Video Of The Day" 
-            videoSrc={newsVideo2}
-          />
-        <br></br>
-        <ImageCarouselCard title="Memes Of The Day" images={carouselImages} />
-        <br></br>
-        <VideoCard 
-            title="GPT Speaks Jamaican Patois" 
-            videoSrc={newsVideo3}
-          />
       </main>
     </div>
   );
