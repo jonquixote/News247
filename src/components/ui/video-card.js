@@ -62,6 +62,7 @@ const VideoCard = ({ title, videoSrc }) => {
               onLoadedMetadata={() => {
                 videoRef.current.currentTime = 0; // Ensure the first frame is displayed
               }}
+              style={{ display: isPlaying ? 'block' : 'block' }} // Ensure the video is displayed
             >
               Your browser does not support the video tag.
             </video>
