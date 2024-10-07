@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Card } from './card';
-import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Maximize } from 'lucide-react';
 
 const VideoCard = ({ title, videoSrc }) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);  // Changed to initially unmuted
   const [error, setError] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const videoRef = useRef(null);
@@ -28,11 +28,15 @@ const VideoCard = ({ title, videoSrc }) => {
     };
   }, []);
 
-  const togglePlay = () => {
+  const playVideo = () => {
     if (videoRef.current.paused) {
       videoRef.current.play();
       setIsPlaying(true);
-    } else {
+    }
+  };
+
+  const pauseVideo = () => {
+    if (!videoRef.current.paused) {
       videoRef.current.pause();
       setIsPlaying(false);
     }
@@ -41,6 +45,16 @@ const VideoCard = ({ title, videoSrc }) => {
   const toggleMute = () => {
     setIsMuted(!isMuted);
     videoRef.current.muted = !videoRef.current.muted;
+  };
+
+  const enterFullscreen = () => {
+    if (videoRef.current.requestFullscreen) {
+      videoRef.current.requestFullscreen();
+    } else if (videoRef.current.webkitRequestFullscreen) { // Safari
+      videoRef.current.webkitRequestFullscreen();
+    } else if (videoRef.current.msRequestFullscreen) { // IE11
+      videoRef.current.msRequestFullscreen();
+    }
   };
 
   return (
@@ -69,6 +83,7 @@ const VideoCard = ({ title, videoSrc }) => {
                 videoRef.current.currentTime = 0;
               }}
               style={{ display: isLoaded ? 'block' : 'none' }}
+              onClick={pauseVideo}  // Added onClick to pause video
             >
               Your browser does not support the video tag.
             </video>
@@ -80,29 +95,41 @@ const VideoCard = ({ title, videoSrc }) => {
             {!isPlaying && isLoaded && (
               <button
                 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-4 hover:bg-opacity-75 transition-all"
-                onClick={togglePlay}
+                onClick={playVideo}
               >
                 <Play className="h-12 w-12" />
               </button>
             )}
-            {isPlaying && isLoaded && (
+            {isLoaded && (
               <div className="absolute bottom-2 left-2 right-2 flex justify-between items-center">
-                <button
-                  className="bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75 transition-all"
-                  onClick={togglePlay}
-                >
-                  <Pause className="h-6 w-6" />
-                </button>
-                <button
-                  className="bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75 transition-all"
-                  onClick={toggleMute}
-                >
-                  {isMuted ? (
-                    <VolumeX className="h-6 w-6" />
-                  ) : (
-                    <Volume2 className="h-6 w-6" />
-                  )}
-                </button>
+                {isPlaying ? (
+                  <button
+                    className="bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75 transition-all"
+                    onClick={pauseVideo}
+                  >
+                    <Pause className="h-6 w-6" />
+                  </button>
+                ) : (
+                  <div className="w-10 h-10" /> // Placeholder to maintain layout
+                )}
+                <div className="flex space-x-2">
+                  <button
+                    className="bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75 transition-all"
+                    onClick={toggleMute}
+                  >
+                    {isMuted ? (
+                      <VolumeX className="h-6 w-6" />
+                    ) : (
+                      <Volume2 className="h-6 w-6" />
+                    )}
+                  </button>
+                  <button
+                    className="bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75 transition-all"
+                    onClick={enterFullscreen}
+                  >
+                    <Maximize className="h-6 w-6" />
+                  </button>
+                </div>
               </div>
             )}
           </>
