@@ -7,6 +7,7 @@ const VideoCard = ({ title, videoSrc }) => {
   const [isMuted, setIsMuted] = useState(true);
   const [error, setError] = useState(null);
   const videoRef = useRef(null);
+  const [videoLoaded, setVideoLoaded] = useState(false);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -22,6 +23,10 @@ const VideoCard = ({ title, videoSrc }) => {
       }
     };
   }, []);
+
+  const handleLoadedMetadata = () => {
+    setVideoLoaded(true); // Set video as loaded to show the first frame
+  };
 
   const togglePlay = () => {
     if (videoRef.current.paused) {
@@ -58,10 +63,11 @@ const VideoCard = ({ title, videoSrc }) => {
               muted={isMuted}
               loop
               playsInline
+              onLoadedMetadata={handleLoadedMetadata} // Capture the first frame
             >
               Your browser does not support the video tag.
             </video>
-            {!isPlaying && (
+            {!isPlaying && videoLoaded && ( // Show play button only if video is loaded
               <button
                 className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-4 hover:bg-opacity-75 transition-all"
                 onClick={togglePlay}
