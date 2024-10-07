@@ -12,6 +12,7 @@ import ImageCarouselCard from './components/ui/imagecarouselcard';
 import VideoCard from './components/ui/video-card';
 import { Play, Pause, Volume2, VolumeX } from 'lucide-react';
 import './styles/globals.css'
+import navLogo from './media/logo.jpg';
 import newsImage1 from './media/newsImage1.png';
 import newsImage2 from './media/newsImage2.jpg';
 import newsImage3 from './media/newsImage3.jpg';
@@ -142,7 +143,7 @@ const NewsApp = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex-shrink-0 flex items-center">
-              <h1 className="text-xl font-bold">APM News</h1>
+              <img src={navLogo} alt="APM News Logo" className="h-9" /> {/* Adjust height as needed */}
             </div>
             <div className="flex items-center">
               <DropdownMenu>
