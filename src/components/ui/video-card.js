@@ -4,10 +4,11 @@ import { Play, Pause, Volume2, VolumeX, Maximize } from 'lucide-react';
 
 const VideoCard = ({ title, videoSrc }) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);  // Changed to initially unmuted
+  const [isMuted, setIsMuted] = useState(false);
   const [error, setError] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const videoRef = useRef(null);
+  const fullscreenVideoRef = useRef(null);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -47,15 +48,53 @@ const VideoCard = ({ title, videoSrc }) => {
     videoRef.current.muted = !videoRef.current.muted;
   };
 
-  const enterFullscreen = () => {
-    if (videoRef.current.requestFullscreen) {
-      videoRef.current.requestFullscreen();
-    } else if (videoRef.current.webkitRequestFullscreen) { // Safari
-      videoRef.current.webkitRequestFullscreen();
-    } else if (videoRef.current.msRequestFullscreen) { // IE11
-      videoRef.current.msRequestFullscreen();
+  const openFullscreenVideo = () => {
+    if (fullscreenVideoRef.current) {
+      fullscreenVideoRef.current.src = videoSrc;
+      fullscreenVideoRef.current.style.display = 'block';
+      if (fullscreenVideoRef.current.requestFullscreen) {
+        fullscreenVideoRef.current.requestFullscreen();
+      } else if (fullscreenVideoRef.current.webkitRequestFullscreen) {
+        fullscreenVideoRef.current.webkitRequestFullscreen();
+      } else if (fullscreenVideoRef.current.msRequestFullscreen) {
+        fullscreenVideoRef.current.msRequestFullscreen();
+      }
+      fullscreenVideoRef.current.play();
     }
   };
+
+  const closeFullscreenVideo = () => {
+    if (fullscreenVideoRef.current) {
+      fullscreenVideoRef.current.pause();
+      fullscreenVideoRef.current.style.display = 'none';
+      fullscreenVideoRef.current.src = '';
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+      }
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+        closeFullscreenVideo();
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('msfullscreenchange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('msfullscreenchange', handleFullscreenChange);
+    };
+  }, []);
 
   return (
     <Card className="overflow-hidden relative h-full">
@@ -83,7 +122,16 @@ const VideoCard = ({ title, videoSrc }) => {
                 videoRef.current.currentTime = 0;
               }}
               style={{ display: isLoaded ? 'block' : 'none' }}
-              onClick={pauseVideo}  // Added onClick to pause video
+              onClick={pauseVideo}
+            >
+              Your browser does not support the video tag.
+            </video>
+            <video
+              ref={fullscreenVideoRef}
+              className="hidden fixed inset-0 w-full h-full z-50 bg-black"
+              playsInline
+              preload="none"
+              onClick={closeFullscreenVideo}
             >
               Your browser does not support the video tag.
             </video>
@@ -110,7 +158,7 @@ const VideoCard = ({ title, videoSrc }) => {
                     <Pause className="h-6 w-6" />
                   </button>
                 ) : (
-                  <div className="w-10 h-10" /> // Placeholder to maintain layout
+                  <div className="w-10 h-10" />
                 )}
                 <div className="flex space-x-2">
                   <button
@@ -125,7 +173,7 @@ const VideoCard = ({ title, videoSrc }) => {
                   </button>
                   <button
                     className="bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75 transition-all"
-                    onClick={enterFullscreen}
+                    onClick={openFullscreenVideo}
                   >
                     <Maximize className="h-6 w-6" />
                   </button>
