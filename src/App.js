@@ -148,8 +148,8 @@ const NewsApp = () => {
       
       <main className="flex-grow container mx-auto px-4 py-8">
         {/* Featured Articles Section */}
-        <section className="mb-12">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <section className="mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <div className="md:col-span-2">
               <Card className="h-full overflow-hidden rounded-lg relative cursor-pointer" onClick={() => openArticle(mainFeaturedArticle)}>
                 <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black to-transparent text-white z-10">
@@ -210,7 +210,7 @@ const NewsApp = () => {
         </section>
 
         {/* Remaining Articles Section */}
-        <section>
+        <section className="mt-6">
           <h2 className="text-2xl font-semibold mb-4">More News</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {newsArticles.slice(4).map((item) => (
