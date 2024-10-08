@@ -38,7 +38,7 @@ const ArticlePage = () => {
                     <div className="px-8">
                     <p className="text-sm text-center text-gray-400 mb-2">By {article.author} | {article.date}</p>
                     <h2 className="text-5xl text-center font-semibold mb-2">{article.title}</h2>
-                    <p className="text-gray-600 text-center text-xl font-semibold mb-2">{article.tagline}</p>
+                    <p className="text-gray-600 text-center text-lg font-semibold mb-2">{article.tagline}</p>
                     <p className="text-gray-600 mb-4 max-w-[800px] mx-auto">{article.content}</p>
                     
                     {/* Render tweets if available */}
