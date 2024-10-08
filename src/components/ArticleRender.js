@@ -26,18 +26,18 @@ const ArticleRenderer = ({ article }) => {
   };
 
   return (
-    <div className="article-content">
+    <div className="article-content w-full">
       {article.mainImage && (
         <div className="-mx-6 -mt-6 mb-6">
           <img src={article.mainImage} alt="Main article image" className="w-full h-auto object-cover" />
         </div>
       )}
-      <div className="space-y-6 px-6">
-        <h1 className="text-3xl font-bold mb-2">{article.title}</h1>
+      <div className="space-y-6 px-4 sm:px-6">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">{article.title}</h1>
         {article.tagline && (
-          <p className="text-xl text-gray-600 mb-4">{article.tagline}</p>
+          <p className="text-lg sm:text-xl text-gray-600 mb-4">{article.tagline}</p>
         )}
-        <p className="text-gray-600 mb-4">By {article.author} | {article.date}</p>
+        <p className="text-sm sm:text-base text-gray-600 mb-4">By {article.author} | {article.date}</p>
         {article.content.map(renderBlock)}
       </div>
     </div>

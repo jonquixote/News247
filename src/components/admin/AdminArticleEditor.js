@@ -187,15 +187,31 @@ const AdminArticleEditor = () => {
   };
 
   return (
-    <div className="admin-article-editor max-w-[1400px] mx-auto p-6">
-      <div className="lg:flex lg:space-x-6">
-        <div className="lg:w-1/2 mb-6 lg:mb-0">
+    <div className="admin-article-editor w-full max-w-[1400px] mx-auto p-4 sm:p-6">
+      <div className="lg:flex lg:space-x-6 space-y-6 lg:space-y-0">
+        <div className="lg:w-1/2 w-full">
           <Card>
             <CardHeader>
               <CardTitle>Create New Article</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                  <Input
+                    type="text"
+                    value={article.title}
+                    onChange={(e) => setArticle(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="Article Title"
+                    className="w-full sm:w-1/2"
+                  />
+                  <Input
+                    type="text"
+                    value={article.tagline}
+                    onChange={(e) => setArticle(prev => ({ ...prev, tagline: e.target.value }))}
+                    placeholder="Article Tagline"
+                    className="w-full sm:w-1/2"
+                  />
+                </div>
                 <div>
                   <label className="block mb-2">Main Image</label>
                   <input
@@ -204,42 +220,23 @@ const AdminArticleEditor = () => {
                     onChange={(e) => handleFileUpload(null, e, true)}
                     className="mb-2"
                   />
+                  {article.mainImage && (
+                    <img src={article.mainImage} alt="Main article image" className="max-w-full h-auto mb-4" />
+                  )}
                 </div>
-                <div className="flex space-x-4">
-                  <Input
-                    type="text"
-                    value={article.title}
-                    onChange={(e) => setArticle(prev => ({ ...prev, title: e.target.value }))}
-                    placeholder="Article Title"
-                    className="w-1/2"
-                  />
-                  <Input
-                    type="text"
-                    value={article.tagline}
-                    onChange={(e) => setArticle(prev => ({ ...prev, tagline: e.target.value }))}
-                    placeholder="Article Tagline"
-                    className="w-1/2"
-                  />
-                </div>
-                <div className="flex space-x-6">
-                    <div className="w-1/2 mb-6 mb-0">
-                        <Input
-                            type="text"
-                            value={article.author}
-                            onChange={(e) => setArticle(prev => ({ ...prev, author: e.target.value }))}
-                            placeholder="Author"
-                            className="w-full"
-                        />
-                    </div>
-                    <div className="w-1/2 mb-6 mb-0">
-                    <Input
-                        type="date"
-                        value={article.date}
-                        onChange={(e) => setArticle(prev => ({ ...prev, date: e.target.value }))}
-                        className="w-full"
-                    />
-                    </div>
-                </div>
+                <Input
+                  type="text"
+                  value={article.author}
+                  onChange={(e) => setArticle(prev => ({ ...prev, author: e.target.value }))}
+                  placeholder="Author"
+                  className="w-full"
+                />
+                <Input
+                  type="date"
+                  value={article.date}
+                  onChange={(e) => setArticle(prev => ({ ...prev, date: e.target.value }))}
+                  className="w-full"
+                />
 
                 <DragDropContext onDragEnd={onDragEnd}>
                   <Droppable droppableId="blocks">
@@ -276,7 +273,7 @@ const AdminArticleEditor = () => {
                   </Droppable>
                 </DragDropContext>
 
-                <div className="flex space-x-2">
+                <div className="flex flex-wrap gap-2">
                   <Button onClick={() => addBlock(BlockTypes.TEXT)} variant="outline">Add Text</Button>
                   <Button onClick={() => addBlock(BlockTypes.IMAGE)} variant="outline">Add Image</Button>
                   <Button onClick={() => addBlock(BlockTypes.VIDEO)} variant="outline">Add Video</Button>
@@ -292,15 +289,15 @@ const AdminArticleEditor = () => {
           </Card>
         </div>
 
-        <div className="lg:w-1/2">
+        <div className="lg:w-1/2 w-full">
           <Card className="overflow-hidden">
             <CardHeader>
-                <div className="pb-4">
-                    <CardTitle>Preview</CardTitle>
-                </div>
+              <CardTitle>Preview</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <ArticleRenderer article={article} />
+              <div className="max-w-full overflow-x-auto">
+                <ArticleRenderer article={article} />
+              </div>
             </CardContent>
           </Card>
         </div>
