@@ -204,9 +204,6 @@ const AdminArticleEditor = () => {
                     onChange={(e) => handleFileUpload(null, e, true)}
                     className="mb-2"
                   />
-                  {article.mainImage && (
-                    <img src={article.mainImage} alt="Main article image" className="max-w-full h-auto mb-4" />
-                  )}
                 </div>
                 <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
                   <Input
@@ -294,12 +291,12 @@ const AdminArticleEditor = () => {
         <div className="lg:w-1/2 w-full">
           <Card className="overflow-hidden">
             <CardHeader>
-              <CardTitle>Preview</CardTitle>
+                <div className="pb-4">
+                  <CardTitle>Preview</CardTitle>
+                </div>
             </CardHeader>
-            <CardContent className="p-0">
-              <div className="max-w-full overflow-x-auto">
-                <ArticleRenderer article={article} />
-              </div>
+            <CardContent className="p-0"> {/* Remove padding here */}
+              <ArticleRenderer article={article} />
             </CardContent>
           </Card>
         </div>
