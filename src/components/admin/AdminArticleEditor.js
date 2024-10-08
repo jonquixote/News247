@@ -196,6 +196,18 @@ const AdminArticleEditor = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
+                <div>
+                  <label className="block mb-2">Main Image</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileUpload(null, e, true)}
+                    className="mb-2"
+                  />
+                  {article.mainImage && (
+                    <img src={article.mainImage} alt="Main article image" className="max-w-full h-auto mb-4" />
+                  )}
+                </div>
                 <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
                   <Input
                     type="text"
@@ -212,18 +224,7 @@ const AdminArticleEditor = () => {
                     className="w-full sm:w-1/2"
                   />
                 </div>
-                <div>
-                  <label className="block mb-2">Main Image</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleFileUpload(null, e, true)}
-                    className="mb-2"
-                  />
-                  {article.mainImage && (
-                    <img src={article.mainImage} alt="Main article image" className="max-w-full h-auto mb-4" />
-                  )}
-                </div>
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
                 <Input
                   type="text"
                   value={article.author}
@@ -237,6 +238,7 @@ const AdminArticleEditor = () => {
                   onChange={(e) => setArticle(prev => ({ ...prev, date: e.target.value }))}
                   className="w-full"
                 />
+                </div>
 
                 <DragDropContext onDragEnd={onDragEnd}>
                   <Droppable droppableId="blocks">
