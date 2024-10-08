@@ -12,6 +12,7 @@ import './styles/globals.css'
 import navLogo from './media/logo.jpg';
 import HomePage from './components/HomePage';
 import ArticlePage from './components/ArticlePage';
+import AdminArticleEditor from './components/admin/AdminArticleEditor';
 
 const NewsApp = () => {
   return (
@@ -37,6 +38,9 @@ const NewsApp = () => {
                       <DropdownMenuItem>Home</DropdownMenuItem>
                     </Link>
                     <DropdownMenuItem>Categories</DropdownMenuItem>
+                    <Link to="/admin">
+                      <DropdownMenuItem>Admin</DropdownMenuItem>
+                    </Link>
                     <DropdownMenuItem>About</DropdownMenuItem>
                     <DropdownMenuItem>Contact</DropdownMenuItem>
                   </DropdownMenuContent>
@@ -49,6 +53,7 @@ const NewsApp = () => {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/article/:id" element={<ArticlePage />} />
+          <Route path="/admin"  element={<AdminArticleEditor />} />
         </Routes>
       </div>
     </Router>

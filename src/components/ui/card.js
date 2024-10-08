@@ -6,7 +6,7 @@ const Card = React.forwardRef(({ className, ...props }, ref) => (
   <div
     ref={ref}
     className={joinClasses(
-      "rounded-lg border bg-white shadow-md",
+      "rounded-lg border bg-white shadow-md overflow-hidden", // Add overflow-hidden here
       className
     )}
     {...props}
