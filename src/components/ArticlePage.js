@@ -25,7 +25,7 @@ const ArticlePage = () => {
                 <div className="flex flex-col items-center">
                     {/* Leave whitespace for the navigation bar */}
                     <div style={{ height: `${navHeight}px` }}></div>
-                    <div className="flex items-center justify-center w-full h-[calc(100vh-${navHeight}px)] px-6">
+                    <div className="flex items-center justify-center w-full h-[calc(100vh-${navHeight}px)] px-4">
                         <VideoCard 
                             title={article.title} 
                             videoSrc={article.video} 
