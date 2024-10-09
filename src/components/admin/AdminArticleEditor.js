@@ -222,11 +222,16 @@ const AdminArticleEditor = () => {
       alert('Article published successfully!');
     } catch (error) {
       console.error('Error publishing article:', error);
-      if (error.code === 'ERR_NETWORK') {
-        alert('Network error: Unable to connect to the server. Please check if the server is running and accessible.');
+      if (error.response) {
+        console.error('Error response:', error.response.data);
+        console.error('Error status:', error.response.status);
+        console.error('Error headers:', error.response.headers);
+      } else if (error.request) {
+        console.error('Error request:', error.request);
       } else {
-        alert(`Error publishing article: ${error.response ? JSON.stringify(error.response.data) : error.message}`);
+        console.error('Error message:', error.message);
       }
+      alert(`Error publishing article: ${error.message}`);
     }
   };
 
