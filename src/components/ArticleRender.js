@@ -29,7 +29,7 @@ const ArticleRenderer = ({ article }) => {
     <div className="article-content w-full">
       {article.mainImage && (
         <div className="-mx-6 -mt-6 mb-6">
-          <img src={article.mainImage} alt="Main article image" className="w-full h-auto object-cover" />
+          <img src={article.mainImage} alt={article.title} className="w-full h-2/5 object-cover mb-4" />
         </div>
       )}
       <div className="space-y-6 px-4 sm:px-6">

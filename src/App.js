@@ -13,6 +13,8 @@ import navLogo from './media/logo.jpg';
 import HomePage from './components/HomePage';
 import ArticlePage from './components/ArticlePage';
 import AdminArticleEditor from './components/admin/AdminArticleEditor';
+import ArticleListPage from './components/ArticleListPage';
+import ArticleFullPage from './components/ArticleFullPage';
 
 const NavMenu = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -32,7 +34,9 @@ const NavMenu = () => {
         <DropdownMenuItem asChild onClick={closeMenu}>
           <Link to="/" className="w-full">Home</Link>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={closeMenu}>Categories</DropdownMenuItem>
+        <DropdownMenuItem asChild onClick={closeMenu}>
+          <Link to="/articles" className="w-full">All Articles</Link>
+        </DropdownMenuItem>
         <DropdownMenuItem asChild onClick={closeMenu}>
           <Link to="/admin" className="w-full">Admin</Link>
         </DropdownMenuItem>
@@ -69,7 +73,8 @@ const NewsApp = () => {
         <Navigation />
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/article/:id" element={<ArticlePage />} />
+          <Route path="/articles" element={<ArticleListPage />} />
+          <Route path="/article/:id" element={<ArticleFullPage />} />
           <Route path="/admin" element={<AdminArticleEditor />} />
         </Routes>
       </div>
