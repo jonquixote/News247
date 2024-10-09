@@ -4,6 +4,7 @@ import ArticleRenderer from '../ArticleRender';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import Input from '../ui/input';
+import Switch from '../ui/switch';
 import { GripVertical, X } from 'lucide-react';
 import axios from 'axios';
 import VideoCard from '../ui/video-card';
@@ -21,8 +22,8 @@ const AdminArticleEditor = () => {
     tagline: '',
     mainImage: '',
     author: '',
-    date: '',
-    content: []
+    content: [],
+    isMainFeatured: false
   });
 
   const addBlock = (type) => {
@@ -207,6 +208,10 @@ const AdminArticleEditor = () => {
     }
   };
 
+  const handleIsMainFeaturedChange = (checked) => {
+    setArticle(prev => ({ ...prev, isMainFeatured: checked }));
+  };
+
   const saveArticle = async (status) => {
     try {
       const updatedContent = await Promise.all(article.content.map(async (block) => {
@@ -229,8 +234,6 @@ const AdminArticleEditor = () => {
       alert(`Error ${status === 'draft' ? 'saving' : 'publishing'} article. Please try again.`);
     }
   };
-
-  const publishArticle = () => saveArticle('published');
 
   return (
     <div className="admin-article-editor w-full max-w-[1400px] mx-auto p-4 sm:p-6">
@@ -267,7 +270,6 @@ const AdminArticleEditor = () => {
                     className="w-full sm:w-1/2"
                   />
                 </div>
-                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
                 <Input
                   type="text"
                   value={article.author}
@@ -275,12 +277,13 @@ const AdminArticleEditor = () => {
                   placeholder="Author"
                   className="w-full"
                 />
-                <Input
-                  type="date"
-                  value={article.date}
-                  onChange={(e) => setArticle(prev => ({ ...prev, date: e.target.value }))}
-                  className="w-full"
-                />
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="main-featured"
+                    checked={article.isMainFeatured}
+                    onCheckedChange={handleIsMainFeaturedChange}
+                  />
+                  <label htmlFor="main-featured">Set as Main Featured Article</label>
                 </div>
 
                 <DragDropContext onDragEnd={onDragEnd}>
@@ -327,7 +330,7 @@ const AdminArticleEditor = () => {
 
                 <div className="flex justify-end space-x-2 mt-6">
                   <Button onClick={() => saveArticle('draft')} variant="outline">Save Draft</Button>
-                  <Button onClick={publishArticle}>Publish Article</Button>
+                  <Button onClick={() => saveArticle('published')}>Publish Article</Button>
                 </div>
               </div>
             </CardContent>
