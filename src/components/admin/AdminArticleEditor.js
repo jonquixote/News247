@@ -185,7 +185,10 @@ const AdminArticleEditor = () => {
               className="mb-2"
             />
             {videoPreview && (
-              <VideoBlock src={videoPreview} title="Video Preview" />
+              <div>
+                <h3>Video Preview:</h3>
+                <VideoBlock src={videoPreview} title="Video Preview" />
+              </div>
             )}
             <Input
               type="text"
