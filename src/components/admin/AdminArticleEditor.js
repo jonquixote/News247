@@ -114,36 +114,11 @@ const AdminArticleEditor = () => {
     }
   };
 
-  const handleVideoUpload = async (file) => {
-    const formData = new FormData();
-    formData.append('video', file);
-
-    try {
-      const response = await axios.post('https://news-backend-delta.vercel.app/api/upload-video', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      if (response.status === 200 && response.data.path) {
-        // Use the returned path to update your article content or state
-        console.log('Video uploaded successfully:', response.data.path);
-        // Update your state or content here
-      } else {
-        throw new Error('Unexpected response from server');
-      }
-    } catch (error) {
-      console.error('Error uploading video:', error);
-      if (error.response) {
-        console.error('Error response:', error.response.data);
-        console.error('Error status:', error.response.status);
-        console.error('Error headers:', error.response.headers);
-      } else if (error.request) {
-        console.error('Error request:', error.request);
-      } else {
-        console.error('Error message:', error.message);
-      }
-      // Handle the error (e.g., show an error message to the user)
+  const handleVideoUpload = (id, event) => {
+    const file = event.target.files[0];
+    if (file && file.type.startsWith('video/')) {
+      const videoUrl = URL.createObjectURL(file);
+      updateBlock(id, { content: videoUrl, file: file });
     }
   };
 
@@ -186,7 +161,7 @@ const AdminArticleEditor = () => {
             <input
               type="file"
               accept="video/*"
-              onChange={(e) => handleVideoUpload(e.target.files[0])}
+              onChange={(e) => handleVideoUpload(block.id, e)}
               className="mb-2"
             />
             {block.content && (
@@ -221,8 +196,8 @@ const AdminArticleEditor = () => {
     formData.append('video', file);
 
     try {
-      console.log('Uploading video to:', `${process.env.REACT_APP_API_URL}/api/upload-video`);
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/upload-video`, formData, {
+      console.log('Uploading video to:', `${process.env.REACT_APP_API_URL}/api/uploadvideo`);
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/uploadvideo`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -230,7 +205,7 @@ const AdminArticleEditor = () => {
         maxBodyLength: Infinity
       });
       console.log('Video upload response:', response.data);
-      return response.data.videoUrl;
+      return response.data.path; // Assuming the server returns the video URL in the 'path' field
     } catch (error) {
       console.error('Error uploading video:', error);
       if (error.response) {
