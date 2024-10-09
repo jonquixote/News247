@@ -206,7 +206,7 @@ const AdminArticleEditor = () => {
       const payload = {
         ...article,
         status: 'published',
-        date: new Date().toISOString() // Set the date to current time when publishing
+        date: new Date().toISOString()
       };
       console.log('Sending article to backend:', JSON.stringify(payload, null, 2));
       const response = await axios.post(`${REACT_APP_API_URL}/api/articles`, payload, {
