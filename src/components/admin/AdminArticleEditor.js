@@ -27,6 +27,8 @@ const AdminArticleEditor = () => {
     isMainFeatured: false // Add this new field
   });
 
+  const [videoFile, setVideoFile] = useState(null);
+
   const addBlock = (type) => {
     let newBlock;
     switch (type) {
@@ -108,6 +110,31 @@ const AdminArticleEditor = () => {
     }
   };
 
+  const handleVideoUpload = async (event) => {
+    const file = event.target.files[0];
+    setVideoFile(file);
+  };
+
+  const uploadVideo = async () => {
+    if (!videoFile) return null;
+
+    const formData = new FormData();
+    formData.append('video', videoFile);
+
+    try {
+      const response = await axios.post(`${REACT_APP_API_URL}/api/upload-video`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        withCredentials: true,
+      });
+      return response.data.videoUrl;
+    } catch (error) {
+      console.error('Error uploading video:', error);
+      throw error;
+    }
+  };
+
   const renderBlockContent = (block) => {
     switch (block.type) {
       case BlockTypes.TEXT:
@@ -147,7 +174,7 @@ const AdminArticleEditor = () => {
             <input
               type="file"
               accept="video/*"
-              onChange={(e) => handleFileUpload(block.id, e)}
+              onChange={handleVideoUpload}
               className="mb-2"
             />
             {block.content && (
@@ -203,34 +230,29 @@ const AdminArticleEditor = () => {
 
   const publishArticle = async () => {
     try {
+      let videoUrl = null;
+      if (videoFile) {
+        videoUrl = await uploadVideo();
+      }
+
       const payload = {
         ...article,
         status: 'published',
-        date: new Date().toISOString()
+        date: new Date().toISOString(),
+        videoUrl: videoUrl,
       };
-      console.log('Sending article to backend:', JSON.stringify(payload, null, 2));
+
       const response = await axios.post(`${REACT_APP_API_URL}/api/articles`, payload, {
         headers: {
           'Content-Type': 'application/json',
         },
         withCredentials: true,
-        timeout: 60000, // 60 seconds timeout
-        maxContentLength: Infinity,
-        maxBodyLength: Infinity
       });
+
       console.log('Response from backend:', response.data);
       alert('Article published successfully!');
     } catch (error) {
       console.error('Error publishing article:', error);
-      if (error.response) {
-        console.error('Error response:', error.response.data);
-        console.error('Error status:', error.response.status);
-        console.error('Error headers:', error.response.headers);
-      } else if (error.request) {
-        console.error('Error request:', error.request);
-      } else {
-        console.error('Error message:', error.message);
-      }
       alert(`Error publishing article: ${error.message}`);
     }
   };
