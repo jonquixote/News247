@@ -99,12 +99,15 @@ const VideoBlock = ({ src, title }) => {
   }, []);
 
   // Helper function to determine if the src is a valid URL or data URL
-  const isValidVideoSource = (string) => {
-    return string && (string.startsWith('http') || string.startsWith('data:video'));
+  const isValidVideoSource = (source) => {
+    return source && (
+      typeof source === 'string' && (source.startsWith('http') || source.startsWith('data:video')) ||
+      source instanceof File
+    );
   };
 
   // Determine the video source
-  const videoSrc = isValidVideoSource(src) ? src : null;
+  const videoSrc = isValidVideoSource(src) ? (src instanceof File ? URL.createObjectURL(src) : src) : null;
 
   console.log("Rendered video source:", videoSrc); // Debugging log
 

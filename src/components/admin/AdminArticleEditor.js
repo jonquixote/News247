@@ -7,6 +7,7 @@ import Input from '../ui/input';
 import Switch from '../ui/switch'; // Import the new Switch component
 import { GripVertical, X } from 'lucide-react';
 import axios from 'axios';
+import VideoBlock from '../blocks/VideoBlock'; // Import the VideoBlock component
 
 const REACT_APP_API_URL = "https://news-backend-delta.vercel.app";
 
@@ -28,6 +29,7 @@ const AdminArticleEditor = () => {
   });
 
   const [videoFile, setVideoFile] = useState(null);
+  const [videoPreview, setVideoPreview] = useState(null);
 
   const addBlock = (type) => {
     let newBlock;
@@ -110,9 +112,13 @@ const AdminArticleEditor = () => {
     }
   };
 
-  const handleVideoUpload = async (event) => {
+  const handleVideoUpload = (event) => {
     const file = event.target.files[0];
-    setVideoFile(file);
+    if (file) {
+      setVideoFile(file);
+      const videoUrl = URL.createObjectURL(file);
+      setVideoPreview(videoUrl);
+    }
   };
 
   const uploadVideo = async () => {
@@ -177,11 +183,8 @@ const AdminArticleEditor = () => {
               onChange={handleVideoUpload}
               className="mb-2"
             />
-            {block.content && (
-              <video controls className="max-w-full h-auto mb-2">
-                <source src={block.content} type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
+            {videoPreview && (
+              <VideoBlock src={videoPreview} title="Video Preview" />
             )}
             <Input
               type="text"
@@ -232,7 +235,15 @@ const AdminArticleEditor = () => {
     try {
       let videoUrl = null;
       if (videoFile) {
-        videoUrl = await uploadVideo();
+        const formData = new FormData();
+        formData.append('video', videoFile);
+        const uploadResponse = await axios.post(`${REACT_APP_API_URL}/api/upload-video`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+          withCredentials: true,
+        });
+        videoUrl = uploadResponse.data.videoUrl;
       }
 
       const payload = {
@@ -247,12 +258,24 @@ const AdminArticleEditor = () => {
           'Content-Type': 'application/json',
         },
         withCredentials: true,
+        timeout: 60000,
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity
       });
 
       console.log('Response from backend:', response.data);
       alert('Article published successfully!');
     } catch (error) {
       console.error('Error publishing article:', error);
+      if (error.response) {
+        console.error('Error response:', error.response.data);
+        console.error('Error status:', error.response.status);
+        console.error('Error headers:', error.response.headers);
+      } else if (error.request) {
+        console.error('Error request:', error.request);
+      } else {
+        console.error('Error message:', error.message);
+      }
       alert(`Error publishing article: ${error.message}`);
     }
   };
