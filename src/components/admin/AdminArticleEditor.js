@@ -4,12 +4,8 @@ import ArticleRenderer from '../ArticleRender';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import Input from '../ui/input';
-import Switch from '../ui/switch'; // Import the new Switch component
 import { GripVertical, X } from 'lucide-react';
 import axios from 'axios';
-import VideoBlock from './blocks/VideoBlock';  // Make sure this import is correct
-
-const REACT_APP_API_URL = "https://news-backend-delta.vercel.app";
 
 const BlockTypes = {
   TEXT: 'text',
@@ -24,12 +20,9 @@ const AdminArticleEditor = () => {
     tagline: '',
     mainImage: '',
     author: '',
-    content: [],
-    isMainFeatured: false // Add this new field
+    date: '',
+    content: []
   });
-
-  const [videoFile, setVideoFile] = useState(null);
-  const [videoPreview, setVideoPreview] = useState(null);
 
   const addBlock = (type) => {
     let newBlock;
@@ -112,33 +105,11 @@ const AdminArticleEditor = () => {
     }
   };
 
-  const handleVideoUpload = (event) => {
+  const handleVideoUpload = (id, event) => {
     const file = event.target.files[0];
     if (file) {
-      setVideoFile(file);
       const videoUrl = URL.createObjectURL(file);
-      setVideoPreview(videoUrl);
-      console.log("Video preview URL:", videoUrl); // Debugging log
-    }
-  };
-
-  const uploadVideo = async () => {
-    if (!videoFile) return null;
-
-    const formData = new FormData();
-    formData.append('video', videoFile);
-
-    try {
-      const response = await axios.post(`${REACT_APP_API_URL}/api/upload-video`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        withCredentials: true,
-      });
-      return response.data.videoUrl;
-    } catch (error) {
-      console.error('Error uploading video:', error);
-      throw error;
+      updateBlock(id, { content: videoUrl, file: file });
     }
   };
 
@@ -181,14 +152,14 @@ const AdminArticleEditor = () => {
             <input
               type="file"
               accept="video/*"
-              onChange={handleVideoUpload}
+              onChange={(e) => handleVideoUpload(block.id, e)}
               className="mb-2"
             />
-            {videoPreview && (
-              <div>
-                <h3>Video Preview:</h3>
-                <VideoBlock src={videoPreview} title="Video Preview" />
-              </div>
+            {block.content && (
+              <video controls className="max-w-full h-auto mb-2">
+                <source src={block.content} type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
             )}
             <Input
               type="text"
@@ -214,75 +185,47 @@ const AdminArticleEditor = () => {
     }
   };
 
-  const saveArticle = async () => {
+  const uploadVideoToS3 = async (file) => {
+    const formData = new FormData();
+    formData.append('video', file);
+
     try {
-      const payload = { ...article, status: 'draft' };
-      console.log('Sending article to backend:', JSON.stringify(payload, null, 2));
-      const response = await axios.post(`${REACT_APP_API_URL}/api/articles`, payload, {
+      const response = await axios.post('http://localhost:5000/api/upload-video', formData, {
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'multipart/form-data',
         },
-        withCredentials: true,
-        timeout: 60000, // 60 seconds timeout
-        maxContentLength: Infinity,
-        maxBodyLength: Infinity
       });
-      console.log('Response from backend:', response.data);
-      alert('Article saved as draft successfully!');
+      return response.data.videoUrl;
     } catch (error) {
-      console.error('Error saving article:', error.response ? error.response.data : error.message);
-      alert(`Error saving article: ${error.response ? JSON.stringify(error.response.data) : error.message}`);
+      console.error('Error uploading video:', error);
+      throw error;
     }
   };
 
-  const publishArticle = async () => {
+  const saveArticle = async (status) => {
     try {
-      let videoUrl = null;
-      if (videoFile) {
-        const formData = new FormData();
-        formData.append('video', videoFile);
-        const uploadResponse = await axios.post(`${REACT_APP_API_URL}/api/upload-video`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-          withCredentials: true,
-        });
-        videoUrl = uploadResponse.data.videoUrl;
-      }
+      const updatedContent = await Promise.all(article.content.map(async (block) => {
+        if (block.type === BlockTypes.VIDEO && block.file) {
+          const videoUrl = await uploadVideoToS3(block.file);
+          return { ...block, content: videoUrl, file: undefined };
+        }
+        return block;
+      }));
 
-      const payload = {
+      const response = await axios.post('http://localhost:5000/api/articles', {
         ...article,
-        status: 'published',
-        date: new Date().toISOString(),
-        videoUrl: videoUrl,
-      };
-
-      const response = await axios.post(`${REACT_APP_API_URL}/api/articles`, payload, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        withCredentials: true,
-        timeout: 60000,
-        maxContentLength: Infinity,
-        maxBodyLength: Infinity
+        content: updatedContent,
+        status: status,
       });
-
-      console.log('Response from backend:', response.data);
-      alert('Article published successfully!');
+      console.log(`Article ${status === 'draft' ? 'saved' : 'published'}:`, response.data);
+      alert(`Article ${status === 'draft' ? 'saved as draft' : 'published'} successfully!`);
     } catch (error) {
-      console.error('Error publishing article:', error);
-      if (error.response) {
-        console.error('Error response:', error.response.data);
-        console.error('Error status:', error.response.status);
-        console.error('Error headers:', error.response.headers);
-      } else if (error.request) {
-        console.error('Error request:', error.request);
-      } else {
-        console.error('Error message:', error.message);
-      }
-      alert(`Error publishing article: ${error.message}`);
+      console.error(`Error ${status === 'draft' ? 'saving' : 'publishing'} article:`, error);
+      alert(`Error ${status === 'draft' ? 'saving' : 'publishing'} article. Please try again.`);
     }
   };
+
+  const publishArticle = () => saveArticle('published');
 
   return (
     <div className="admin-article-editor w-full max-w-[1400px] mx-auto p-4 sm:p-6">
@@ -303,14 +246,14 @@ const AdminArticleEditor = () => {
                     className="mb-2"
                   />
                 </div>
-                <Input
-                  type="text"
-                  value={article.title}
-                  onChange={(e) => setArticle(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="Article Title"
-                  className="w-full"
-                />
                 <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                  <Input
+                    type="text"
+                    value={article.title}
+                    onChange={(e) => setArticle(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="Article Title"
+                    className="w-full sm:w-1/2"
+                  />
                   <Input
                     type="text"
                     value={article.tagline}
@@ -318,25 +261,21 @@ const AdminArticleEditor = () => {
                     placeholder="Article Tagline"
                     className="w-full sm:w-1/2"
                   />
-                  <Input
-                    type="text"
-                    value={article.author}
-                    onChange={(e) => setArticle(prev => ({ ...prev, author: e.target.value }))}
-                    placeholder="Author"
-                    className="w-full sm:w-1/2"
-                  />
                 </div>
-
-                {/* Add the main featured article switch */}
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="main-featured"
-                    checked={article.isMainFeatured}
-                    onCheckedChange={(checked) => setArticle(prev => ({ ...prev, isMainFeatured: checked }))}
-                  />
-                  <label htmlFor="main-featured" className="text-sm font-medium text-gray-700">
-                    Main Featured Article
-                  </label>
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                <Input
+                  type="text"
+                  value={article.author}
+                  onChange={(e) => setArticle(prev => ({ ...prev, author: e.target.value }))}
+                  placeholder="Author"
+                  className="w-full"
+                />
+                <Input
+                  type="date"
+                  value={article.date}
+                  onChange={(e) => setArticle(prev => ({ ...prev, date: e.target.value }))}
+                  className="w-full"
+                />
                 </div>
 
                 <DragDropContext onDragEnd={onDragEnd}>
@@ -382,8 +321,8 @@ const AdminArticleEditor = () => {
                 </div>
 
                 <div className="flex justify-end space-x-2 mt-6">
-                  <Button onClick={saveArticle} variant="outline">Save Draft</Button>
-                  <Button onClick={publishArticle} disabled={!article.title}>Publish Article</Button>
+                  <Button onClick={() => saveArticle('draft')} variant="outline">Save Draft</Button>
+                  <Button onClick={publishArticle}>Publish Article</Button>
                 </div>
               </div>
             </CardContent>
