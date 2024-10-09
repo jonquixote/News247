@@ -105,7 +105,7 @@ const HomePage = () => {
   useEffect(() => {
     const fetchArticles = async () => {
       try {
-        const mainFeaturedResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/articles/main-featured`);
+        const mainFeaturedResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/articles/featured/main`);
         console.log('Main featured article response:', mainFeaturedResponse.data); // Add this log
         setMainFeaturedArticle(mainFeaturedResponse.data);
 
