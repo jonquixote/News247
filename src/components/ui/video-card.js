@@ -116,6 +116,8 @@ const VideoCard = ({ title, videoSrc }) => {
               onClick={isFullscreen ? undefined : pauseVideo}
               controls={isFullscreen}
             >
+              <source src={videoSrc} type="video/mp4" />
+              <source src={videoSrc.replace('.mp4', '.webm')} type="video/webm" />
               Your browser does not support the video tag.
             </video>
             {!isLoaded && (

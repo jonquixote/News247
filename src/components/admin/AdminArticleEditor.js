@@ -188,7 +188,10 @@ const AdminArticleEditor = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        withCredentials: true
+        withCredentials: true,
+        timeout: 60000, // 60 seconds timeout
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity
       });
       console.log('Response from backend:', response.data);
       alert('Article saved as draft successfully!');
@@ -210,7 +213,10 @@ const AdminArticleEditor = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        withCredentials: true
+        withCredentials: true,
+        timeout: 60000, // 60 seconds timeout
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity
       });
       console.log('Response from backend:', response.data);
       alert('Article published successfully!');
