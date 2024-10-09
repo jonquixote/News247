@@ -4,6 +4,7 @@ import ArticleRenderer from '../ArticleRender';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import Input from '../ui/input';
+import Switch from '../ui/switch'; // Import the new Switch component
 import { GripVertical, X } from 'lucide-react';
 import axios from 'axios';
 
@@ -22,8 +23,8 @@ const AdminArticleEditor = () => {
     tagline: '',
     mainImage: '',
     author: '',
-    date: '',
-    content: []
+    content: [],
+    isMainFeatured: false // Add this new field
   });
 
   const addBlock = (type) => {
@@ -199,7 +200,11 @@ const AdminArticleEditor = () => {
 
   const publishArticle = async () => {
     try {
-      const payload = { ...article, status: 'published' };
+      const payload = {
+        ...article,
+        status: 'published',
+        date: new Date().toISOString() // Set the date to current time when publishing
+      };
       console.log('Sending article to backend:', JSON.stringify(payload, null, 2));
       const response = await axios.post(`${REACT_APP_API_URL}/api/articles`, payload, {
         headers: {
@@ -238,14 +243,14 @@ const AdminArticleEditor = () => {
                     className="mb-2"
                   />
                 </div>
+                <Input
+                  type="text"
+                  value={article.title}
+                  onChange={(e) => setArticle(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="Article Title"
+                  className="w-full"
+                />
                 <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-                  <Input
-                    type="text"
-                    value={article.title}
-                    onChange={(e) => setArticle(prev => ({ ...prev, title: e.target.value }))}
-                    placeholder="Article Title"
-                    className="w-full sm:w-1/2"
-                  />
                   <Input
                     type="text"
                     value={article.tagline}
@@ -253,21 +258,25 @@ const AdminArticleEditor = () => {
                     placeholder="Article Tagline"
                     className="w-full sm:w-1/2"
                   />
+                  <Input
+                    type="text"
+                    value={article.author}
+                    onChange={(e) => setArticle(prev => ({ ...prev, author: e.target.value }))}
+                    placeholder="Author"
+                    className="w-full sm:w-1/2"
+                  />
                 </div>
-                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-                <Input
-                  type="text"
-                  value={article.author}
-                  onChange={(e) => setArticle(prev => ({ ...prev, author: e.target.value }))}
-                  placeholder="Author"
-                  className="w-full"
-                />
-                <Input
-                  type="date"
-                  value={article.date}
-                  onChange={(e) => setArticle(prev => ({ ...prev, date: e.target.value }))}
-                  className="w-full"
-                />
+
+                {/* Add the main featured article switch */}
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="main-featured"
+                    checked={article.isMainFeatured}
+                    onCheckedChange={(checked) => setArticle(prev => ({ ...prev, isMainFeatured: checked }))}
+                  />
+                  <label htmlFor="main-featured" className="text-sm font-medium text-gray-700">
+                    Main Featured Article
+                  </label>
                 </div>
 
                 <DragDropContext onDragEnd={onDragEnd}>
@@ -314,7 +323,7 @@ const AdminArticleEditor = () => {
 
                 <div className="flex justify-end space-x-2 mt-6">
                   <Button onClick={saveArticle} variant="outline">Save Draft</Button>
-                  <Button onClick={publishArticle}>Publish Article</Button>
+                  <Button onClick={publishArticle} disabled={!article.title}>Publish Article</Button>
                 </div>
               </div>
             </CardContent>

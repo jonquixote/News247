@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { Card, CardContent } from './ui/card';
 import { ChevronRight } from 'lucide-react';
 import ImageCarouselCard from './ui/imagecarouselcard';
@@ -98,13 +99,32 @@ const carouselImages = [
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const [mainFeaturedArticle, setMainFeaturedArticle] = useState(null);
+  const [recentArticles, setRecentArticles] = useState([]);
+
+  useEffect(() => {
+    const fetchArticles = async () => {
+      try {
+        const mainFeaturedResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/articles/main-featured`);
+        console.log('Main featured article response:', mainFeaturedResponse.data); // Add this log
+        setMainFeaturedArticle(mainFeaturedResponse.data);
+
+        const recentArticlesResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/articles?limit=5`);
+        console.log('Recent articles response:', recentArticlesResponse.data); // Add this log
+        setRecentArticles(recentArticlesResponse.data);
+      } catch (error) {
+        console.error('Error fetching articles:', error);
+      }
+    };
+
+    fetchArticles();
+  }, []);
 
   const navigateToArticle = (articleId) => {
     navigate(`/article/${articleId}`);
   };
 
-  const mainFeaturedArticle = newsArticles[0];
-  const stackedFeaturedArticles = newsArticles.slice(1, 4);
+  const stackedFeaturedArticles = recentArticles.slice(0, 3);
 
   return (
     <main className="flex-grow container mx-auto px-4 py-4">
@@ -112,41 +132,53 @@ const HomePage = () => {
       <section className="mb-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <div className="md:col-span-2">
-            <Card className="h-full overflow-hidden rounded-lg relative cursor-pointer" onClick={() => navigateToArticle(mainFeaturedArticle.id)}>
-              <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black to-transparent text-white z-10">
-                <h2 className="text-5xl xs:text-3xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-8xl font-bold mb-2">{mainFeaturedArticle.title}</h2>
-                <p className="text-xs lg:text-sm xl:text-sm mb-2">{mainFeaturedArticle.tagline}</p>
-              </div>
-              <img 
-                src={mainFeaturedArticle.image} 
-                alt={mainFeaturedArticle.title} 
-                className="w-full h-full object-cover"
-              />
-            </Card>
+            {mainFeaturedArticle ? (
+              <Card className="h-full overflow-hidden rounded-lg relative cursor-pointer" onClick={() => navigateToArticle(mainFeaturedArticle._id)}>
+                <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black to-transparent text-white z-10">
+                  <h2 className="text-5xl xs:text-3xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-8xl font-bold mb-2">{mainFeaturedArticle.title}</h2>
+                  <p className="text-xs lg:text-sm xl:text-sm mb-2">{mainFeaturedArticle.tagline}</p>
+                </div>
+                <img 
+                  src={mainFeaturedArticle.mainImage} 
+                  alt={mainFeaturedArticle.title} 
+                  className="w-full h-full object-cover"
+                />
+              </Card>
+            ) : (
+              <Card className="h-full flex items-center justify-center">
+                <p>No main featured article available</p>
+              </Card>
+            )}
           </div>
           {/* Stacked Featured Articles Section */}
           <Card className="h-[300px] md:h-auto flex flex-col overflow-hidden">
-            {stackedFeaturedArticles.map((article) => (
-              <div 
-                key={article.id} 
-                className="flex-1 overflow-hidden cursor-pointer border-b border-gray-200 last:border-b-0"
-                onClick={() => navigateToArticle(article.id)}
-              >
-                <div className="flex h-full">
-                  <div className="w-1/3">
-                    <img 
-                      src={article.image} 
-                      alt={article.title} 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="w-2/3 p-2 flex flex-col justify-center">
-                    <h3 className="text-sm font-semibold mb-1 line-clamp-2">{article.title}</h3>
-                    <p className="text-xs text-gray-500">By {article.author}</p>
+            {stackedFeaturedArticles.length > 0 ? (
+              stackedFeaturedArticles.map((article) => (
+                <div 
+                  key={article._id} 
+                  className="flex-1 overflow-hidden cursor-pointer border-b border-gray-200 last:border-b-0"
+                  onClick={() => navigateToArticle(article._id)}
+                >
+                  <div className="flex h-full">
+                    <div className="w-1/3">
+                      <img 
+                        src={article.mainImage} 
+                        alt={article.title} 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="w-2/3 p-2 flex flex-col justify-center">
+                      <h3 className="text-sm font-semibold mb-1 line-clamp-2">{article.title}</h3>
+                      <p className="text-xs text-gray-500">By {article.author}</p>
+                    </div>
                   </div>
                 </div>
+              ))
+            ) : (
+              <div className="flex-1 flex items-center justify-center">
+                <p>No recent articles available</p>
               </div>
-            ))}
+            )}
           </Card>
         </div>
       </section>
