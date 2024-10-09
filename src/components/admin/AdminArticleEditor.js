@@ -201,6 +201,8 @@ const AdminArticleEditor = () => {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity
       });
       console.log('Video upload response:', response.data);
       return response.data.videoUrl;
