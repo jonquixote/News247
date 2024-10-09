@@ -196,7 +196,8 @@ const AdminArticleEditor = () => {
     formData.append('video', file);
 
     try {
-      const response = await axios.post('https://news-backend-delta.vercel.app/api/upload-video', formData, {
+      console.log('Uploading video to:', `${process.env.REACT_APP_API_URL}/api/upload-video`);
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/upload-video`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
