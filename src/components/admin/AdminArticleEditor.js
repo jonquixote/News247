@@ -196,7 +196,7 @@ const AdminArticleEditor = () => {
     formData.append('video', file);
 
     try {
-      const response = await axios.post('https://news-backend-ten.vercel.app/api/upload-video', formData, {
+      const response = await axios.post('https://news-backend-delta.vercel.app/api/upload-video', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -223,7 +223,7 @@ const AdminArticleEditor = () => {
         return block;
       }));
 
-      const response = await axios.post('https://news-backend-ten.vercel.app/api/articles', {
+      const response = await axios.post('https://news-backend-delta.vercel.app/api/articles', {
         ...article,
         content: updatedContent,
         status: status,
