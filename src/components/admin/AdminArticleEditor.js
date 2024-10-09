@@ -201,7 +201,8 @@ const AdminArticleEditor = () => {
           'Content-Type': 'multipart/form-data',
         },
       });
-      return response.data.videoUrl; // This should now be the S3 URL
+      console.log('Video upload response:', response.data);
+      return response.data.videoUrl;
     } catch (error) {
       console.error('Error uploading video:', error);
       throw error;
