@@ -106,11 +106,11 @@ const HomePage = () => {
     const fetchArticles = async () => {
       try {
         const mainFeaturedResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/articles/featured/main`);
-        console.log('Main featured article response:', mainFeaturedResponse.data); // Add this log
+        console.log('Main featured article response:', mainFeaturedResponse.data);
         setMainFeaturedArticle(mainFeaturedResponse.data);
 
-        const recentArticlesResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/articles?limit=5`);
-        console.log('Recent articles response:', recentArticlesResponse.data); // Add this log
+        const recentArticlesResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/articles?limit=6`);
+        console.log('Recent articles response:', recentArticlesResponse.data);
         setRecentArticles(recentArticlesResponse.data);
       } catch (error) {
         console.error('Error fetching articles:', error);
@@ -124,7 +124,9 @@ const HomePage = () => {
     navigate(`/article/${articleId}`);
   };
 
-  const stackedFeaturedArticles = recentArticles.slice(0, 3);
+  const stackedFeaturedArticles = recentArticles
+    .filter(article => article._id !== mainFeaturedArticle?._id)
+    .slice(0, 3);
 
   return (
     <main className="flex-grow container mx-auto px-4 py-4">
