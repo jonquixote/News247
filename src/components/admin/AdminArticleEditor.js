@@ -205,7 +205,7 @@ const AdminArticleEditor = () => {
         maxBodyLength: Infinity
       });
       console.log('Video upload response:', response.data);
-      return response.data.path; // Assuming the server returns the video URL in the 'path' field
+      return response.data.videoUrl;
     } catch (error) {
       console.error('Error uploading video:', error);
       if (error.response) {
