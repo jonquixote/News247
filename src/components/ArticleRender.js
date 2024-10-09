@@ -2,18 +2,23 @@ import React from 'react';
 import { TwitterTweetEmbed } from 'react-twitter-embed';
 import TextBlock from './blocks/TextBlock';
 import ImageBlock from './blocks/ImageBlock';
-import VideoBlock from './blocks/VideoBlock';
+import VideoCard from './ui/video-card';
 
 const ArticleRenderer = ({ article }) => {
   const renderBlock = (block) => {
+    console.log("Rendering block:", block); // Debugging log
     switch (block.type) {
       case 'text':
         return <TextBlock key={block.id} content={block.content} />;
       case 'image':
         return <ImageBlock key={block.id} src={block.content} alt={block.alt || "Article image"} caption={block.caption} />;
       case 'video':
-        console.log("Rendering video block:", block); // Debugging log
-        return <VideoBlock key={block.id} src={block.content} title={block.title} />;
+        console.log("Rendering video block:", block);
+        return block.content ? (
+          <VideoCard key={block.id} title={block.title || "Video"} videoSrc={block.content} />
+        ) : (
+          <div key={block.id}>No video content available</div>
+        );
       case 'tweet':
         return (
           <div key={block.id} align="center" className="mb-4">
@@ -21,6 +26,7 @@ const ArticleRenderer = ({ article }) => {
           </div>
         );
       default:
+        console.log("Unknown block type:", block.type);
         return null;
     }
   };

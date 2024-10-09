@@ -3,6 +3,8 @@ import { Card } from './card';
 import { Play, Pause, Volume2, VolumeX, Maximize } from 'lucide-react';
 
 const VideoCard = ({ title, videoSrc }) => {
+  console.log("VideoCard received props:", { title, videoSrc });
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [error, setError] = useState(null);
@@ -11,24 +13,29 @@ const VideoCard = ({ title, videoSrc }) => {
   const videoRef = useRef(null);
   const containerRef = useRef(null);
 
+  const isLocalFile = videoSrc && (videoSrc.startsWith('blob:') || videoSrc.startsWith('data:'));
+
   useEffect(() => {
     const video = videoRef.current;
     if (video) {
-      video.addEventListener('error', (e) => {
-        console.error("Video error:", e);
-        setError("Error loading video. Please check the video source.");
-      });
-      video.addEventListener('loadeddata', () => {
+      const handleCanPlay = () => {
+        console.log('Video can play');
         setIsLoaded(true);
-      });
+      };
+      const handleError = (e) => {
+        console.error('Video error:', e);
+        setError('Error loading video');
+      };
+
+      video.addEventListener('canplay', handleCanPlay);
+      video.addEventListener('error', handleError);
+
+      return () => {
+        video.removeEventListener('canplay', handleCanPlay);
+        video.removeEventListener('error', handleError);
+      };
     }
-    return () => {
-      if (video) {
-        video.removeEventListener('error', () => {});
-        video.removeEventListener('loadeddata', () => {});
-      }
-    };
-  }, []);
+  }, [videoSrc]);
 
   const playVideo = () => {
     if (videoRef.current.paused) {

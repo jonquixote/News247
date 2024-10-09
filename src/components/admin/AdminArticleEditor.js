@@ -6,6 +6,7 @@ import { Button } from '../ui/button';
 import Input from '../ui/input';
 import { GripVertical, X } from 'lucide-react';
 import axios from 'axios';
+import VideoCard from '../ui/video-card';
 
 const BlockTypes = {
   TEXT: 'text',
@@ -52,7 +53,7 @@ const AdminArticleEditor = () => {
       case BlockTypes.TEXT:
       case BlockTypes.IMAGE:
       case BlockTypes.VIDEO:
-        newBlock = { id: Date.now().toString(), type, content: '' };
+        newBlock = { id: Date.now().toString(), type, content: '', file: null };
         break;
       default:
         console.error("Unknown block type:", type);
@@ -93,21 +94,28 @@ const AdminArticleEditor = () => {
   const handleFileUpload = (id, event, isMainImage = false) => {
     const file = event.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (isMainImage) {
-          setArticle(prev => ({ ...prev, mainImage: reader.result }));
+      if (isMainImage) {
+        setArticle(prev => ({ ...prev, mainImage: URL.createObjectURL(file) }));
+      } else {
+        const fileType = file.type.split('/')[0];
+        if (fileType === 'video') {
+          const videoUrl = URL.createObjectURL(file);
+          console.log('Video URL created:', videoUrl);
+          updateBlock(id, { content: videoUrl, file: file });
         } else {
-          updateBlock(id, { content: reader.result });
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            updateBlock(id, { content: reader.result });
+          };
+          reader.readAsDataURL(file);
         }
-      };
-      reader.readAsDataURL(file);
+      }
     }
   };
 
   const handleVideoUpload = (id, event) => {
     const file = event.target.files[0];
-    if (file) {
+    if (file && file.type.startsWith('video/')) {
       const videoUrl = URL.createObjectURL(file);
       updateBlock(id, { content: videoUrl, file: file });
     }
@@ -156,10 +164,7 @@ const AdminArticleEditor = () => {
               className="mb-2"
             />
             {block.content && (
-              <video controls className="max-w-full h-auto mb-2">
-                <source src={block.content} type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
+              <VideoCard title={block.title || "Video Preview"} videoSrc={block.content} />
             )}
             <Input
               type="text"
@@ -190,12 +195,12 @@ const AdminArticleEditor = () => {
     formData.append('video', file);
 
     try {
-      const response = await axios.post('http://localhost:5000/api/upload-video', formData, {
+      const response = await axios.post('https://news-backend-ten.vercel.app/api/upload-video', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-      return response.data.videoUrl;
+      return response.data.videoUrl; // This should now be the S3 URL
     } catch (error) {
       console.error('Error uploading video:', error);
       throw error;
@@ -212,7 +217,7 @@ const AdminArticleEditor = () => {
         return block;
       }));
 
-      const response = await axios.post('http://localhost:5000/api/articles', {
+      const response = await axios.post('https://news-backend-ten.vercel.app/api/articles', {
         ...article,
         content: updatedContent,
         status: status,
