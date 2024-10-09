@@ -7,7 +7,7 @@ import Input from '../ui/input';
 import Switch from '../ui/switch'; // Import the new Switch component
 import { GripVertical, X } from 'lucide-react';
 import axios from 'axios';
-import VideoBlock from '../blocks/VideoBlock'; // Import the VideoBlock component
+import VideoBlock from './blocks/VideoBlock';  // Make sure this import is correct
 
 const REACT_APP_API_URL = "https://news-backend-delta.vercel.app";
 
@@ -118,6 +118,7 @@ const AdminArticleEditor = () => {
       setVideoFile(file);
       const videoUrl = URL.createObjectURL(file);
       setVideoPreview(videoUrl);
+      console.log("Video preview URL:", videoUrl); // Debugging log
     }
   };
 
