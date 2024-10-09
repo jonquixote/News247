@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import Input from '../ui/input';
 import { GripVertical, X } from 'lucide-react';
+import axios from 'axios';
+
+const REACT_APP_API_URL = "https://news-backend-delta.vercel.app";
 
 const BlockTypes = {
   TEXT: 'text',
@@ -176,14 +179,44 @@ const AdminArticleEditor = () => {
     }
   };
 
-  const saveArticle = () => {
-    console.log('Saving article:', article);
-    alert('Article saved successfully!');
+  const saveArticle = async () => {
+    try {
+      const payload = { ...article, status: 'draft' };
+      console.log('Sending article to backend:', JSON.stringify(payload, null, 2));
+      const response = await axios.post(`${REACT_APP_API_URL}/api/articles`, payload, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        withCredentials: true
+      });
+      console.log('Response from backend:', response.data);
+      alert('Article saved as draft successfully!');
+    } catch (error) {
+      console.error('Error saving article:', error.response ? error.response.data : error.message);
+      alert(`Error saving article: ${error.response ? JSON.stringify(error.response.data) : error.message}`);
+    }
   };
 
-  const publishArticle = () => {
-    console.log('Publishing article:', article);
-    alert('Article published successfully!');
+  const publishArticle = async () => {
+    try {
+      const payload = { ...article, status: 'published' };
+      console.log('Sending article to backend:', JSON.stringify(payload, null, 2));
+      const response = await axios.post(`${REACT_APP_API_URL}/api/articles`, payload, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        withCredentials: true
+      });
+      console.log('Response from backend:', response.data);
+      alert('Article published successfully!');
+    } catch (error) {
+      console.error('Error publishing article:', error);
+      if (error.code === 'ERR_NETWORK') {
+        alert('Network error: Unable to connect to the server. Please check if the server is running and accessible.');
+      } else {
+        alert(`Error publishing article: ${error.response ? JSON.stringify(error.response.data) : error.message}`);
+      }
+    }
   };
 
   return (
