@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Card, CardContent } from './ui/card';
@@ -112,7 +112,7 @@ const FeaturedCardLoader = () => (
 );
 
 const StackedCardLoader = () => (
-  <Card className="h-[300px] md:h-auto flex flex-col overflow-hidden">
+  <Card className="h-full flex flex-col overflow-hidden">
     {[1, 2, 3].map((index) => (
       <div key={index} className="flex-1 border-b border-gray-200 last:border-b-0">
         <div className="flex h-full">
@@ -134,24 +134,42 @@ const HomePage = () => {
   const [mainFeaturedArticle, setMainFeaturedArticle] = useState(null);
   const [recentArticles, setRecentArticles] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const mainCardRef = useRef(null);
+  const stackedCardRef = useRef(null);
 
   useEffect(() => {
     const fetchArticles = async () => {
       try {
+        setIsLoading(true);
         const mainFeaturedResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/articles/featured/main`);
-        const recentArticlesResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/articles?limit=6`);
-        
+        console.log('Main featured article response:', mainFeaturedResponse.data);
         setMainFeaturedArticle(mainFeaturedResponse.data);
+
+        const recentArticlesResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/articles?limit=6`);
+        console.log('Recent articles response:', recentArticlesResponse.data);
         setRecentArticles(recentArticlesResponse.data);
-        setIsLoading(false);
       } catch (error) {
         console.error('Error fetching articles:', error);
+      } finally {
         setIsLoading(false);
       }
     };
 
     fetchArticles();
   }, []);
+
+  useEffect(() => {
+    const adjustHeight = () => {
+      if (mainCardRef.current && stackedCardRef.current) {
+        stackedCardRef.current.style.height = `${mainCardRef.current.offsetHeight}px`;
+      }
+    };
+
+    adjustHeight();
+    window.addEventListener('resize', adjustHeight);
+
+    return () => window.removeEventListener('resize', adjustHeight);
+  }, [isLoading]);
 
   const navigateToArticle = (articleId) => {
     navigate(`/article/${articleId}`);
@@ -166,11 +184,11 @@ const HomePage = () => {
       {/* Featured Articles Section */}
       <section className="mb-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <div className="md:col-span-2">
+          <div className="md:col-span-2" ref={mainCardRef}>
             {isLoading ? (
               <FeaturedCardLoader />
             ) : mainFeaturedArticle ? (
-              <Card className="h-full overflow-hidden rounded-lg relative cursor-pointer opacity-0 animate-fade-in" onClick={() => navigateToArticle(mainFeaturedArticle._id)}>
+              <Card className="h-full overflow-hidden rounded-lg relative cursor-pointer" onClick={() => navigateToArticle(mainFeaturedArticle._id)}>
                 <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black to-transparent text-white z-10">
                   <h2 className="text-5xl xs:text-3xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-8xl font-bold mb-2">{mainFeaturedArticle.title}</h2>
                   <p className="text-xs lg:text-sm xl:text-sm mb-2">{mainFeaturedArticle.tagline}</p>
@@ -188,39 +206,41 @@ const HomePage = () => {
             )}
           </div>
           {/* Stacked Featured Articles Section */}
-          {isLoading ? (
-            <StackedCardLoader />
-          ) : (
-            <Card className="h-[300px] md:h-auto flex flex-col overflow-hidden">
-              {stackedFeaturedArticles.length > 0 ? (
-                stackedFeaturedArticles.map((article) => (
-                  <div 
-                    key={article._id} 
-                    className="flex-1 overflow-hidden cursor-pointer border-b border-gray-200 last:border-b-0 opacity-0 animate-fade-in"
-                    onClick={() => navigateToArticle(article._id)}
-                  >
-                    <div className="flex h-full">
-                      <div className="w-1/3">
-                        <img 
-                          src={article.mainImage} 
-                          alt={article.title} 
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="w-2/3 p-2 flex flex-col justify-center">
-                        <h3 className="text-sm font-semibold mb-1 line-clamp-2">{article.title}</h3>
-                        <p className="text-xs text-gray-500">By {article.author}</p>
+          <div ref={stackedCardRef}>
+            {isLoading ? (
+              <StackedCardLoader />
+            ) : (
+              <Card className="h-full flex flex-col overflow-hidden">
+                {stackedFeaturedArticles.length > 0 ? (
+                  stackedFeaturedArticles.map((article) => (
+                    <div 
+                      key={article._id} 
+                      className="flex-1 overflow-hidden cursor-pointer border-b border-gray-200 last:border-b-0"
+                      onClick={() => navigateToArticle(article._id)}
+                    >
+                      <div className="flex h-full">
+                        <div className="w-1/3">
+                          <img 
+                            src={article.mainImage} 
+                            alt={article.title} 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="w-2/3 p-2 flex flex-col justify-center">
+                          <h3 className="text-sm font-semibold mb-1 line-clamp-2">{article.title}</h3>
+                          <p className="text-xs text-gray-500">By {article.author}</p>
+                        </div>
                       </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="flex-1 flex items-center justify-center">
+                    <p>No recent articles available</p>
                   </div>
-                ))
-              ) : (
-                <div className="flex-1 flex items-center justify-center">
-                  <p>No recent articles available</p>
-                </div>
-              )}
-            </Card>
-          )}
+                )}
+              </Card>
+            )}
+          </div>
         </div>
       </section>
 
