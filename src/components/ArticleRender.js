@@ -21,7 +21,7 @@ const ArticleRenderer = ({ article }) => {
         );
       case 'tweet':
         return (
-          <div key={block.id} align="center" className="mb-4">
+          <div key={block.id} className="flex justify-center my-4">
             <TwitterTweetEmbed tweetId={block.content} />
           </div>
         );

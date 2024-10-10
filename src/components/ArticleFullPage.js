@@ -40,13 +40,18 @@ const ArticleFullPage = () => {
       case 'text':
         return <TextBlock key={index} content={block.content} />;
       case 'image':
-        return <ImageBlock key={index} src={block.content} alt={block.caption} caption={block.caption} />;
+        return <ImageBlock key={index} src={block.content} alt={block.alt} caption={block.caption} isFullPage={true} />;
       case 'video':
         return <VideoBlock key={index} src={block.content} title={block.caption} />;
       case 'tweet':
         return (
           <div key={index} className="flex justify-center my-4">
-            <TwitterTweetEmbed tweetId={block.content} />
+            <div style={{ maxWidth: '400px', width: '100%' }}>
+              <TwitterTweetEmbed
+                tweetId={block.content}
+                options={{ width: '100%' }}
+              />
+            </div>
           </div>
         );
       default:
