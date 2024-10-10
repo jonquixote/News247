@@ -5,6 +5,7 @@ import { Card, CardContent } from './ui/card';
 import { ChevronRight } from 'lucide-react';
 import ImageCarouselCard from './ui/imagecarouselcard';
 import VideoCard from './ui/video-card';
+import { GridLoader } from 'react-spinners';
 
 // Import your images and videos here
 import newsImage1 from '../media/newsImage1.png';
@@ -101,19 +102,20 @@ const HomePage = () => {
   const navigate = useNavigate();
   const [mainFeaturedArticle, setMainFeaturedArticle] = useState(null);
   const [recentArticles, setRecentArticles] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchArticles = async () => {
       try {
         const mainFeaturedResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/articles/featured/main`);
-        console.log('Main featured article response:', mainFeaturedResponse.data);
-        setMainFeaturedArticle(mainFeaturedResponse.data);
-
         const recentArticlesResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/articles?limit=6`);
-        console.log('Recent articles response:', recentArticlesResponse.data);
+        
+        setMainFeaturedArticle(mainFeaturedResponse.data);
         setRecentArticles(recentArticlesResponse.data);
+        setIsLoading(false);
       } catch (error) {
         console.error('Error fetching articles:', error);
+        setIsLoading(false);
       }
     };
 
@@ -134,8 +136,12 @@ const HomePage = () => {
       <section className="mb-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <div className="md:col-span-2">
-            {mainFeaturedArticle ? (
-              <Card className="h-full overflow-hidden rounded-lg relative cursor-pointer" onClick={() => navigateToArticle(mainFeaturedArticle._id)}>
+            {isLoading ? (
+              <Card className="h-full flex items-center justify-center">
+                <GridLoader color="#4A90E2" />
+              </Card>
+            ) : mainFeaturedArticle ? (
+              <Card className="h-full overflow-hidden rounded-lg relative cursor-pointer opacity-0 animate-fade-in" onClick={() => navigateToArticle(mainFeaturedArticle._id)}>
                 <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black to-transparent text-white z-10">
                   <h2 className="text-5xl xs:text-3xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-8xl font-bold mb-2">{mainFeaturedArticle.title}</h2>
                   <p className="text-xs lg:text-sm xl:text-sm mb-2">{mainFeaturedArticle.tagline}</p>
@@ -154,11 +160,15 @@ const HomePage = () => {
           </div>
           {/* Stacked Featured Articles Section */}
           <Card className="h-[300px] md:h-auto flex flex-col overflow-hidden">
-            {stackedFeaturedArticles.length > 0 ? (
+            {isLoading ? (
+              <div className="flex-1 flex items-center justify-center">
+                <GridLoader color="#4A90E2" />
+              </div>
+            ) : stackedFeaturedArticles.length > 0 ? (
               stackedFeaturedArticles.map((article) => (
                 <div 
                   key={article._id} 
-                  className="flex-1 overflow-hidden cursor-pointer border-b border-gray-200 last:border-b-0"
+                  className="flex-1 overflow-hidden cursor-pointer border-b border-gray-200 last:border-b-0 opacity-0 animate-fade-in"
                   onClick={() => navigateToArticle(article._id)}
                 >
                   <div className="flex h-full">
