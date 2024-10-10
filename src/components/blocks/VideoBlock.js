@@ -1,8 +1,8 @@
-import React, { useState, useRef, useEffect, useCallback, forwardRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Card } from '../ui/card';
 import { Play, Pause, Volume2, VolumeX, Maximize } from 'lucide-react';
 
-const VideoBlock = forwardRef(({ src, title }, ref) => {
+const VideoBlock = React.memo(({ src, title }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [error, setError] = useState(null);
@@ -20,16 +20,14 @@ const VideoBlock = forwardRef(({ src, title }, ref) => {
 
   useEffect(() => {
     const loadVideo = async () => {
-      setError(null);
-      setIsLoaded(false);
-      cleanupVideoSrc();
-
       if (src.startsWith('blob:')) {
         setVideoSrc(src);
-        setIsLoaded(true);
       } else {
         try {
-          const response = await fetch(src, { mode: 'cors' });
+          const response = await fetch(src, { 
+            mode: 'cors',
+            credentials: 'omit'
+          });
           if (!response.ok) throw new Error('Failed to fetch video');
           const blob = await response.blob();
           const url = URL.createObjectURL(blob);
@@ -38,43 +36,21 @@ const VideoBlock = forwardRef(({ src, title }, ref) => {
         } catch (error) {
           console.error('Error loading video:', error);
           setError('Failed to load video. Please try again later.');
+          setVideoSrc(null);
         }
       }
     };
 
     loadVideo();
 
-    return () => {
-      cleanupVideoSrc();
-    };
+    return cleanupVideoSrc;
   }, [src, cleanupVideoSrc]);
 
   useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(
-        !!(document.fullscreenElement ||
-           document.webkitFullscreenElement ||
-           document.mozFullScreenElement ||
-           document.msFullscreenElement)
-      );
-    };
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
-    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
-
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
-      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
-      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
-    };
-  }, []);
-
-  useEffect(() => {
-    console.log("Rendered video source:", videoSrc);
-  }, [videoSrc]);
+    // Reset error and loaded state when src changes
+    setError(null);
+    setIsLoaded(false);
+  }, [src]);
 
   const playVideo = () => {
     if (videoRef.current.paused) {
@@ -112,6 +88,31 @@ const VideoBlock = forwardRef(({ src, title }, ref) => {
       }
     }
   };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(
+        !!(document.fullscreenElement ||
+           document.webkitFullscreenElement ||
+           document.mozFullScreenElement ||
+           document.msFullscreenElement)
+      );
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+    };
+  }, []);
+
+  console.log("Rendered video source:", videoSrc); // Debugging log
 
   return (
     <Card className="overflow-hidden relative" ref={containerRef}>
@@ -201,4 +202,4 @@ const VideoBlock = forwardRef(({ src, title }, ref) => {
   );
 });
 
-export default React.memo(VideoBlock);
+export default VideoBlock;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import TextBlock from './blocks/TextBlock';
@@ -12,7 +12,6 @@ const ArticleFullPage = () => {
   const { id } = useParams();
   const [article, setArticle] = useState(null);
   const [error, setError] = useState(null);
-  const videoRefs = useRef({});
 
   useEffect(() => {
     const fetchArticle = async () => {
@@ -43,13 +42,9 @@ const ArticleFullPage = () => {
           />
         );
       case 'video':
-        if (!videoRefs.current[block.id]) {
-          videoRefs.current[block.id] = React.createRef();
-        }
         return (
           <VideoBlock
             key={block.id}
-            ref={videoRefs.current[block.id]}
             src={block.content}
             title={block.caption}
           />
@@ -71,12 +66,8 @@ const ArticleFullPage = () => {
   }, []);
 
   const memoizedContent = useMemo(() => {
-    console.log("Recalculating memoizedContent");
-    return article?.content.map(renderBlock) || null;
-  }, [article, renderBlock]);
-
-  useEffect(() => {
-    console.log("Article or renderBlock changed, videoRefs:", videoRefs.current);
+    if (!article) return null;
+    return article.content.map(renderBlock);
   }, [article, renderBlock]);
 
   if (error) {
