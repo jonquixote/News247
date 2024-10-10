@@ -287,7 +287,7 @@ const AdminArticleEditor = () => {
       if (status === 'published') {
         setPublishStatus('published');
         setTimeout(() => {
-          navigate(`/admin/articles/${response.data._id}`);
+          navigate(`/articles/${response.data._id}`);
         }, 3000);
       } else {
         navigate('/admin/articles');
@@ -395,24 +395,17 @@ const AdminArticleEditor = () => {
                 </div>
 
                 <div className="flex justify-end space-x-2 mt-6">
-                  <Card className="w-1/2">
-                    <CardContent className="p-4">
-                      <Button onClick={() => saveArticle('draft')} variant="outline" className="w-full">Save Draft</Button>
-                    </CardContent>
-                  </Card>
-                  <Card className="w-1/2 bg-green-50">
-                    <CardContent className="p-4">
-                      <Button 
-                        onClick={() => saveArticle('published')} 
-                        className={`w-full ${publishStatus === 'publishing' ? 'animate-spin' : ''} ${publishStatus === 'published' ? 'bg-green-500' : ''}`}
-                        disabled={publishStatus !== 'idle'}
-                      >
-                        {publishStatus === 'idle' && 'Publish Article'}
-                        {publishStatus === 'publishing' && '🌐'}
-                        {publishStatus === 'published' && 'Published!'}
-                      </Button>
-                    </CardContent>
-                  </Card>
+                  <Button onClick={() => saveArticle('draft')} variant="outline" className="w-full">Save Draft</Button>
+                  <Button 
+                    onClick={() => saveArticle('published')}
+                    variant={'outline'}
+                    className={`w-full ${publishStatus === 'publishing' ? 'animate-spin' : ''} ${publishStatus === 'published' ? 'bg-green-500' : ''}`}
+                    disabled={publishStatus !== 'idle'}
+                  >
+                    {publishStatus === 'idle' && 'Publish Article'}
+                    {publishStatus === 'publishing' && '🌐'}
+                    {publishStatus === 'published' && 'Published!'}
+                  </Button>
                 </div>
               </div>
             </CardContent>
