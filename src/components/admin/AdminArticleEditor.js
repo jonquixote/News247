@@ -29,6 +29,8 @@ const AdminArticleEditor = () => {
     isMainFeatured: false
   });
 
+  const [publishStatus, setPublishStatus] = useState('idle'); // 'idle', 'publishing', 'published'
+
   useEffect(() => {
     if (id) {
       // Fetch the existing article for editing
@@ -254,6 +256,9 @@ const AdminArticleEditor = () => {
   };
 
   const saveArticle = async (status) => {
+    if (status === 'published') {
+      setPublishStatus('publishing');
+    }
     try {
       // Upload videos to S3 and update content
       const updatedContent = await Promise.all(article.content.map(async (block) => {
@@ -280,10 +285,17 @@ const AdminArticleEditor = () => {
         console.log('Article created:', response.data);
       }
 
-      // Redirect to the Admin Article List Page after saving
-      navigate('/admin/articles');
+      if (status === 'published') {
+        setPublishStatus('published');
+        setTimeout(() => {
+          navigate(`/articles/${response.data._id}`);
+        }, 3000);
+      } else {
+        navigate('/admin/articles');
+      }
     } catch (error) {
       console.error('Error saving article:', error);
+      setPublishStatus('idle');
       // Handle error (e.g., show error message to user)
     }
   };
@@ -323,20 +335,22 @@ const AdminArticleEditor = () => {
                     className="w-full sm:w-1/2"
                   />
                 </div>
-                <Input
-                  type="text"
-                  value={article.author}
-                  onChange={(e) => setArticle(prev => ({ ...prev, author: e.target.value }))}
-                  placeholder="Author"
-                  className="w-full"
-                />
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="main-featured"
-                    checked={article.isMainFeatured}
-                    onCheckedChange={handleIsMainFeaturedChange}
+                <div className="flex items-center space-x-4">
+                  <Input
+                    type="text"
+                    value={article.author}
+                    onChange={(e) => setArticle(prev => ({ ...prev, author: e.target.value }))}
+                    placeholder="Author"
+                    className="w-full"
                   />
-                  <label htmlFor="main-featured">Set as Main Featured Article</label>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="main-featured"
+                      checked={article.isMainFeatured}
+                      onCheckedChange={handleIsMainFeaturedChange}
+                    />
+                    <label htmlFor="main-featured">Main Featured</label>
+                  </div>
                 </div>
 
                 <DragDropContext onDragEnd={onDragEnd}>
@@ -382,8 +396,24 @@ const AdminArticleEditor = () => {
                 </div>
 
                 <div className="flex justify-end space-x-2 mt-6">
-                  <Button onClick={() => saveArticle('draft')} variant="outline">Save Draft</Button>
-                  <Button onClick={() => saveArticle('published')}>Publish Article</Button>
+                  <Card className="w-1/2">
+                    <CardContent className="p-4">
+                      <Button onClick={() => saveArticle('draft')} variant="outline" className="w-full">Save Draft</Button>
+                    </CardContent>
+                  </Card>
+                  <Card className="w-1/2 bg-green-50">
+                    <CardContent className="p-4">
+                      <Button 
+                        onClick={() => saveArticle('published')} 
+                        className={`w-full ${publishStatus === 'publishing' ? 'animate-spin' : ''} ${publishStatus === 'published' ? 'bg-green-500' : ''}`}
+                        disabled={publishStatus !== 'idle'}
+                      >
+                        {publishStatus === 'idle' && 'Publish Article'}
+                        {publishStatus === 'publishing' && '🌐'}
+                        {publishStatus === 'published' && 'Published!'}
+                      </Button>
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
             </CardContent>
@@ -393,11 +423,9 @@ const AdminArticleEditor = () => {
         <div className="lg:w-1/2 w-full">
           <Card className="overflow-hidden">
             <CardHeader>
-                <div className="pb-4">
-                  <CardTitle>Preview</CardTitle>
-                </div>
+              <CardTitle>Preview</CardTitle>
             </CardHeader>
-            <CardContent className="p-0"> {/* Remove padding here */}
+            <CardContent className="p-0">
               <ArticleRenderer article={article} />
             </CardContent>
           </Card>
