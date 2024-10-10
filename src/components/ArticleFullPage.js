@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import TextBlock from './blocks/TextBlock';
@@ -27,25 +27,17 @@ const ArticleFullPage = () => {
     fetchArticle();
   }, [id]);
 
-  if (error) {
-    return <div className="container mx-auto px-4 py-8 text-center text-red-600">{error}</div>;
-  }
-
-  if (!article) {
-    return <div className="container mx-auto px-4 py-8 text-center">Loading...</div>;
-  }
-
-  const renderBlock = (block, index) => {
+  const renderBlock = useCallback((block, index) => {
     switch (block.type) {
       case 'text':
-        return <TextBlock key={index} content={block.content} />;
+        return <TextBlock key={block.id || index} content={block.content} />;
       case 'image':
-        return <ImageBlock key={index} src={block.content} alt={block.alt} caption={block.caption} isFullPage={true} />;
+        return <ImageBlock key={block.id || index} src={block.content} alt={block.alt} caption={block.caption} isFullPage={true} />;
       case 'video':
-        return <VideoBlock key={index} src={block.content} title={block.caption} />;
+        return <VideoBlock key={block.id || index} src={block.content} title={block.caption} />;
       case 'tweet':
         return (
-          <div key={index} className="flex justify-center my-4">
+          <div key={block.id || index} className="flex justify-center my-4">
             <div style={{ maxWidth: '400px', width: '100%' }}>
               <TwitterTweetEmbed
                 tweetId={block.content}
@@ -57,7 +49,19 @@ const ArticleFullPage = () => {
       default:
         return null;
     }
-  };
+  }, []);
+
+  const memoizedContent = useMemo(() => {
+    return article?.content.map((block, index) => renderBlock(block, index));
+  }, [article, renderBlock]);
+
+  if (error) {
+    return <div className="container mx-auto px-4 py-8 text-center text-red-600">{error}</div>;
+  }
+
+  if (!article) {
+    return <div className="container mx-auto px-4 py-8 text-center">Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -83,7 +87,7 @@ const ArticleFullPage = () => {
           </p>
         )}
         <div className="prose prose-lg mx-auto">
-          {article.content.map((block, index) => renderBlock(block, index))}
+          {memoizedContent}
         </div>
       </div>
     </div>

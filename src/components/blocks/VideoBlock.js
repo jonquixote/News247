@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Card } from '../ui/card';
 import { Play, Pause, Volume2, VolumeX, Maximize } from 'lucide-react';
 
-const VideoBlock = ({ src, title }) => {
+const VideoBlock = React.memo(({ src, title }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [error, setError] = useState(null);
@@ -214,6 +214,6 @@ const VideoBlock = ({ src, title }) => {
       </div>
     </Card>
   );
-};
+});
 
 export default VideoBlock;
