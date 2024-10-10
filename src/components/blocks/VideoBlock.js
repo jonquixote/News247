@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Card } from '../ui/card';
 import { Play, Pause, Volume2, VolumeX, Maximize } from 'lucide-react';
 
@@ -12,39 +12,34 @@ const VideoBlock = React.memo(({ src, title }) => {
   const videoRef = useRef(null);
   const containerRef = useRef(null);
 
-  const cleanupVideoSrc = useCallback(() => {
-    if (videoSrc && videoSrc.startsWith('blob:')) {
-      URL.revokeObjectURL(videoSrc);
+  const loadVideo = useCallback(async () => {
+    setError(null);
+    setIsLoaded(false);
+
+    try {
+      console.log("Attempting to fetch video from:", src);
+      const response = await fetch(src);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      setVideoSrc(url);
+      setIsLoaded(true);
+    } catch (error) {
+      console.error('Error loading video:', error);
+      setError(`Failed to load video. Error: ${error.message}`);
     }
-  }, [videoSrc]);
+  }, [src]);
 
   useEffect(() => {
-    const loadVideo = async () => {
-      if (src.startsWith('blob:')) {
-        setVideoSrc(src);
-      } else {
-        try {
-          const response = await fetch(src, { 
-            mode: 'cors',
-            credentials: 'omit'
-          });
-          if (!response.ok) throw new Error('Failed to fetch video');
-          const blob = await response.blob();
-          const url = URL.createObjectURL(blob);
-          setVideoSrc(url);
-          setIsLoaded(true);
-        } catch (error) {
-          console.error('Error loading video:', error);
-          setError('Failed to load video. Please try again later.');
-          setVideoSrc(null);
-        }
+    loadVideo();
+    return () => {
+      if (videoSrc) {
+        URL.revokeObjectURL(videoSrc);
       }
     };
-
-    loadVideo();
-
-    return cleanupVideoSrc;
-  }, [src, cleanupVideoSrc]);
+  }, [src, loadVideo]);
 
   useEffect(() => {
     // Reset error and loaded state when src changes
@@ -115,8 +110,8 @@ const VideoBlock = React.memo(({ src, title }) => {
   console.log("Rendered video source:", videoSrc); // Debugging log
 
   return (
-    <Card className="overflow-hidden relative" ref={containerRef}>
-      <div className="relative">
+    <Card className="w-full overflow-hidden">
+      <div ref={containerRef} className="relative">
         {title && (
           <div className="absolute top-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 z-10">
             <h2 className="text-xl font-semibold">{title}</h2>
