@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import ArticleRenderer from '../ArticleRender';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
@@ -8,6 +8,7 @@ import Switch from '../ui/switch';
 import { GripVertical, X } from 'lucide-react';
 import axios from 'axios';
 import VideoCard from '../ui/video-card';
+import { useParams, useNavigate } from 'react-router-dom';
 
 const BlockTypes = {
   TEXT: 'text',
@@ -17,6 +18,8 @@ const BlockTypes = {
 };
 
 const AdminArticleEditor = () => {
+  const { id } = useParams(); // Will be undefined when creating a new article
+  const navigate = useNavigate();
   const [article, setArticle] = useState({
     title: '',
     tagline: '',
@@ -25,6 +28,22 @@ const AdminArticleEditor = () => {
     content: [],
     isMainFeatured: false
   });
+
+  useEffect(() => {
+    if (id) {
+      // Fetch the existing article for editing
+      const fetchArticle = async () => {
+        try {
+          const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/articles/${id}`);
+          setArticle(response.data);
+        } catch (error) {
+          console.error('Error fetching article:', error);
+        }
+      };
+
+      fetchArticle();
+    }
+  }, [id]);
 
   const addBlock = (type) => {
     let newBlock;
@@ -199,6 +218,11 @@ const AdminArticleEditor = () => {
   };
 
   const uploadVideoToS3 = async (file) => {
+    if (!file) {
+      console.error('No file provided for upload');
+      return null;
+    }
+
     const formData = new FormData();
     formData.append('video', file);
 
@@ -210,10 +234,16 @@ const AdminArticleEditor = () => {
         maxContentLength: Infinity,
         maxBodyLength: Infinity
       });
-      return response.data.videoUrl;
+      
+      if (response.data && response.data.videoUrl) {
+        return response.data.videoUrl;
+      } else {
+        console.error('Unexpected response format:', response.data);
+        return null;
+      }
     } catch (error) {
       console.error('Error uploading video:', error);
-      throw error;
+      return null;
     }
   };
 
@@ -227,7 +257,7 @@ const AdminArticleEditor = () => {
       const updatedContent = await Promise.all(article.content.map(async (block) => {
         if (block.type === BlockTypes.VIDEO && block.file) {
           const videoUrl = await uploadVideoToS3(block.file);
-          return { ...block, content: videoUrl, file: null };
+          return videoUrl ? { ...block, content: videoUrl, file: null } : block;
         }
         return block;
       }));
@@ -235,13 +265,21 @@ const AdminArticleEditor = () => {
       const articleToSave = {
         ...article,
         content: updatedContent,
-        status: status
+        status
       };
 
-      // Save article to database
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/articles`, articleToSave);
-      console.log('Article saved:', response.data);
-      // Handle successful save (e.g., show a success message, redirect, etc.)
+      if (id) {
+        // Update existing article
+        const response = await axios.patch(`${process.env.REACT_APP_API_URL}/api/articles/${id}`, articleToSave);
+        console.log('Article updated:', response.data);
+      } else {
+        // Create new article
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/articles`, articleToSave);
+        console.log('Article created:', response.data);
+      }
+
+      // Redirect to the Admin Article List Page after saving
+      navigate('/admin/articles');
     } catch (error) {
       console.error('Error saving article:', error);
       // Handle error (e.g., show error message to user)

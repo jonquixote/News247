@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
 import { 
   DropdownMenu, 
@@ -13,11 +13,12 @@ import navLogo from './media/logo.jpg';
 import HomePage from './components/HomePage';
 import ArticlePage from './components/ArticlePage';
 import AdminArticleEditor from './components/admin/AdminArticleEditor';
+import AdminArticleListPage from './components/admin/AdminArticleListPage'; // Import the new component
 import ArticleListPage from './components/ArticleListPage';
 import ArticleFullPage from './components/ArticleFullPage';
 
 const NavMenu = () => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = React.useState(false);
 
   const closeMenu = () => {
     setIsOpen(false);
@@ -38,7 +39,10 @@ const NavMenu = () => {
           <Link to="/articles" className="w-full">All Articles</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild onClick={closeMenu}>
-          <Link to="/admin" className="w-full">Admin</Link>
+          <Link to="/admin/articles" className="w-full">Admin Article List</Link> {/* Add link to Admin Article List */}
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild onClick={closeMenu}>
+          <Link to="/admin" className="w-full">Create New Article</Link> {/* Updated Admin Create route */}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={closeMenu}>About</DropdownMenuItem>
         <DropdownMenuItem onClick={closeMenu}>Contact</DropdownMenuItem>
@@ -76,6 +80,8 @@ const NewsApp = () => {
           <Route path="/articles" element={<ArticleListPage />} />
           <Route path="/article/:id" element={<ArticleFullPage />} />
           <Route path="/admin" element={<AdminArticleEditor />} />
+          <Route path="/admin/articles" element={<AdminArticleListPage />} /> {/* Add the new route */}
+          <Route path="/admin/edit/:id" element={<AdminArticleEditor />} /> {/* Add Edit route */}
         </Routes>
       </div>
     </Router>
