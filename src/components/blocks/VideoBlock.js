@@ -125,12 +125,16 @@ const VideoBlock = ({ src, title }) => {
 
   // Helper function to determine if the src is a valid URL or data URL
   const isValidVideoSource = (string) => {
-    return string && (
-      string.startsWith('http') ||
-      string.startsWith('data:video') ||
-      string.startsWith('blob:') ||
-      /\.(mp4|webm|ogg)$/i.test(string)
-    );
+    if (!string) return false;
+    
+    // Check for URLs starting with http/https, data:video, or blob:
+    if (string.startsWith('http') || string.startsWith('data:video') || string.startsWith('blob:')) {
+      return true;
+    }
+    
+    // Check for common video file extensions
+    const videoExtensions = /\.(mp4|webm|ogg|mov|avi|wmv|flv|mkv|m4v|3gp|3g2|mpeg|mpg|ts)$/i;
+    return videoExtensions.test(string);
   };
 
   // Determine the video source
@@ -168,7 +172,16 @@ const VideoBlock = ({ src, title }) => {
               controls={isFullscreen}
             >
               <source src={videoSrc} type="video/mp4" />
-              <source src={videoSrc.replace('.mp4', '.webm')} type="video/webm" />
+              <source src={videoSrc.replace(/\.[^/.]+$/, ".webm")} type="video/webm" />
+              <source src={videoSrc.replace(/\.[^/.]+$/, ".ogg")} type="video/ogg" />
+              <source src={videoSrc.replace(/\.[^/.]+$/, ".mov")} type="video/quicktime" />
+              <source src={videoSrc} type="video/avi" />
+              <source src={videoSrc} type="video/x-ms-wmv" />
+              <source src={videoSrc} type="video/x-flv" />
+              <source src={videoSrc} type="video/x-matroska" />
+              <source src={videoSrc.replace(/\.[^/.]+$/, ".m4v")} type="video/x-m4v" />
+              <source src={videoSrc} type="video/3gpp" />
+              <source src={videoSrc} type="video/mpeg" />
               Your browser does not support the video tag.
             </video>
             {!isLoaded && (
