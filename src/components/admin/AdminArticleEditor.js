@@ -275,13 +275,14 @@ const AdminArticleEditor = () => {
         status
       };
 
+      let response;
       if (id) {
         // Update existing article
-        const response = await axios.patch(`${process.env.REACT_APP_API_URL}/api/articles/${id}`, articleToSave);
+        response = await axios.patch(`${process.env.REACT_APP_API_URL}/api/articles/${id}`, articleToSave);
         console.log('Article updated:', response.data);
       } else {
         // Create new article
-        const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/articles`, articleToSave);
+        response = await axios.post(`${process.env.REACT_APP_API_URL}/api/articles`, articleToSave);
         console.log('Article created:', response.data);
       }
 
