@@ -8,11 +8,46 @@ const VideoBlock = ({ src, title }) => {
   const [error, setError] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [videoSrc, setVideoSrc] = useState(src);
   const videoRef = useRef(null);
   const containerRef = useRef(null);
 
   useEffect(() => {
-    console.log("Video source:", src); // Debugging log
+    console.log("Initial video source:", src);
+    const checkBlobValidity = async (url) => {
+      try {
+        const response = await fetch(url, { method: 'HEAD' });
+        return response.ok;
+      } catch (error) {
+        console.error("Error checking blob validity:", error);
+        return false;
+      }
+    };
+
+    const setupVideo = async () => {
+      if (src.startsWith('blob:')) {
+        const isValid = await checkBlobValidity(src);
+        if (!isValid) {
+          console.warn("Blob URL is invalid, attempting to fall back to original source");
+          // Attempt to extract the original URL from the blob URL
+          const originalSrc = new URL(src).searchParams.get('src');
+          if (originalSrc) {
+            console.log("Falling back to original source:", originalSrc);
+            setVideoSrc(originalSrc);
+          } else {
+            setVideoSrc(null);
+            setError("The video source is no longer available. Please try reloading the page.");
+          }
+          return;
+        }
+      }
+      setVideoSrc(src);
+    };
+
+    setupVideo();
+  }, [src]);
+
+  useEffect(() => {
     const video = videoRef.current;
     if (video) {
       const handleError = (e) => {
@@ -42,7 +77,7 @@ const VideoBlock = ({ src, title }) => {
         setIsLoaded(false);
       };
       const handleLoaded = () => {
-        console.log("Video loaded successfully"); // Debugging log
+        console.log("Video loaded successfully");
         setIsLoaded(true);
         setError(null);
       };
@@ -55,7 +90,7 @@ const VideoBlock = ({ src, title }) => {
         video.removeEventListener('loadeddata', handleLoaded);
       };
     }
-  }, [src]);
+  }, [videoSrc]);
 
   useEffect(() => {
     // Reset error state when src changes
@@ -137,10 +172,7 @@ const VideoBlock = ({ src, title }) => {
     return videoExtensions.test(string);
   };
 
-  // Determine the video source
-  const videoSrc = isValidVideoSource(src) ? src : null;
-
-  console.log("Rendered video source:", videoSrc); // Debugging log
+  console.log("Rendered video source:", videoSrc);
 
   return (
     <Card className="overflow-hidden relative" ref={containerRef}>
@@ -155,7 +187,7 @@ const VideoBlock = ({ src, title }) => {
             <strong className="font-bold">Error:</strong>
             <span className="block sm:inline"> {error}</span>
           </div>
-        ) : videoSrc ? (
+        ) : isValidVideoSource(videoSrc) ? (
           <>
             <video
               ref={videoRef}
@@ -174,14 +206,6 @@ const VideoBlock = ({ src, title }) => {
               <source src={videoSrc} type="video/mp4" />
               <source src={videoSrc.replace(/\.[^/.]+$/, ".webm")} type="video/webm" />
               <source src={videoSrc.replace(/\.[^/.]+$/, ".ogg")} type="video/ogg" />
-              <source src={videoSrc.replace(/\.[^/.]+$/, ".mov")} type="video/quicktime" />
-              <source src={videoSrc} type="video/avi" />
-              <source src={videoSrc} type="video/x-ms-wmv" />
-              <source src={videoSrc} type="video/x-flv" />
-              <source src={videoSrc} type="video/x-matroska" />
-              <source src={videoSrc.replace(/\.[^/.]+$/, ".m4v")} type="video/x-m4v" />
-              <source src={videoSrc} type="video/3gpp" />
-              <source src={videoSrc} type="video/mpeg" />
               Your browser does not support the video tag.
             </video>
             {!isLoaded && (
