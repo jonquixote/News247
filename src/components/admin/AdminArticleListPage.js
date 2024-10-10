@@ -43,7 +43,11 @@ const AdminArticleListPage = () => {
       setDeleteArticleId(null);
     } catch (error) {
       console.error('Error deleting article:', error);
-      alert('Failed to delete the article. Please try again.');
+      let errorMessage = 'Failed to delete the article. Please try again.';
+      if (error.response && error.response.data && error.response.data.message) {
+        errorMessage = error.response.data.message;
+      }
+      alert(errorMessage);
       setIsModalOpen(false);
       setDeleteArticleId(null);
     }
