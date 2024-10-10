@@ -32,9 +32,23 @@ const ArticleFullPage = () => {
       case 'text':
         return <TextBlock key={block.id || index} content={block.content} />;
       case 'image':
-        return <ImageBlock key={block.id || index} src={block.content} alt={block.alt} caption={block.caption} isFullPage={true} />;
+        return (
+          <ImageBlock
+            key={block.id || index}
+            src={block.content}
+            alt={block.alt}
+            caption={block.caption}
+            isFullPage={true}
+          />
+        );
       case 'video':
-        return <VideoBlock key={block.id || index} src={block.content} title={block.caption} />;
+        return (
+          <VideoBlock
+            key={block.id || index}
+            src={block.content}
+            title={block.caption}
+          />
+        );
       case 'tweet':
         return (
           <div key={block.id || index} className="flex justify-center my-4">
