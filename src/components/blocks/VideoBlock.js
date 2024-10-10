@@ -47,7 +47,7 @@ const VideoBlock = React.memo(({ src, title }) => {
   }, [src, cleanupVideoSrc]);
 
   useEffect(() => {
-    // Reset error state when src changes
+    // Reset error and loaded state when src changes
     setError(null);
     setIsLoaded(false);
   }, [src]);
@@ -111,20 +111,6 @@ const VideoBlock = React.memo(({ src, title }) => {
       document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
     };
   }, []);
-
-  // Helper function to determine if the src is a valid URL or data URL
-  const isValidVideoSource = (string) => {
-    return string && (string.startsWith('http') || string.startsWith('data:video'));
-  };
-
-  // Use the existing videoSrc state instead of declaring a new constant
-  useEffect(() => {
-    if (isValidVideoSource(src)) {
-      setVideoSrc(src);
-    } else {
-      setVideoSrc(null);
-    }
-  }, [src]);
 
   console.log("Rendered video source:", videoSrc); // Debugging log
 
