@@ -27,14 +27,14 @@ const ArticleFullPage = () => {
     fetchArticle();
   }, [id]);
 
-  const renderBlock = useCallback((block, index) => {
+  const renderBlock = useCallback((block) => {
     switch (block.type) {
       case 'text':
-        return <TextBlock key={block.id || index} content={block.content} />;
+        return <TextBlock key={block.id} content={block.content} />;
       case 'image':
         return (
           <ImageBlock
-            key={block.id || index}
+            key={block.id}
             src={block.content}
             alt={block.alt}
             caption={block.caption}
@@ -44,14 +44,14 @@ const ArticleFullPage = () => {
       case 'video':
         return (
           <VideoBlock
-            key={block.id || index}
+            key={block.id}
             src={block.content}
             title={block.caption}
           />
         );
       case 'tweet':
         return (
-          <div key={block.id || index} className="flex justify-center my-4">
+          <div key={block.id} className="flex justify-center my-4">
             <div style={{ maxWidth: '400px', width: '100%' }}>
               <TwitterTweetEmbed
                 tweetId={block.content}
@@ -66,7 +66,7 @@ const ArticleFullPage = () => {
   }, []);
 
   const memoizedContent = useMemo(() => {
-    return article?.content.map((block, index) => renderBlock(block, index));
+    return article?.content.map(renderBlock) || null;
   }, [article, renderBlock]);
 
   if (error) {
