@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import TextBlock from './blocks/TextBlock';
@@ -12,6 +12,7 @@ const ArticleFullPage = () => {
   const { id } = useParams();
   const [article, setArticle] = useState(null);
   const [error, setError] = useState(null);
+  const videoRefs = useRef({});
 
   useEffect(() => {
     const fetchArticle = async () => {
@@ -27,6 +28,57 @@ const ArticleFullPage = () => {
     fetchArticle();
   }, [id]);
 
+  const renderBlock = useCallback((block) => {
+    switch (block.type) {
+      case 'text':
+        return <TextBlock key={block.id} content={block.content} />;
+      case 'image':
+        return (
+          <ImageBlock
+            key={block.id}
+            src={block.content}
+            alt={block.alt}
+            caption={block.caption}
+            isFullPage={true}
+          />
+        );
+      case 'video':
+        if (!videoRefs.current[block.id]) {
+          videoRefs.current[block.id] = React.createRef();
+        }
+        return (
+          <VideoBlock
+            key={block.id}
+            ref={videoRefs.current[block.id]}
+            src={block.content}
+            title={block.caption}
+          />
+        );
+      case 'tweet':
+        return (
+          <div key={block.id} className="flex justify-center my-4">
+            <div style={{ maxWidth: '400px', width: '100%' }}>
+              <TwitterTweetEmbed
+                tweetId={block.content}
+                options={{ width: '100%' }}
+              />
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
+  }, []);
+
+  const memoizedContent = useMemo(() => {
+    console.log("Recalculating memoizedContent");
+    return article?.content.map(renderBlock) || null;
+  }, [article, renderBlock]);
+
+  useEffect(() => {
+    console.log("Article or renderBlock changed, videoRefs:", videoRefs.current);
+  }, [article, renderBlock]);
+
   if (error) {
     return <div className="container mx-auto px-4 py-8 text-center text-red-600">{error}</div>;
   }
@@ -34,25 +86,6 @@ const ArticleFullPage = () => {
   if (!article) {
     return <div className="container mx-auto px-4 py-8 text-center">Loading...</div>;
   }
-
-  const renderBlock = (block, index) => {
-    switch (block.type) {
-      case 'text':
-        return <TextBlock key={index} content={block.content} />;
-      case 'image':
-        return <ImageBlock key={index} src={block.content} alt={block.caption} caption={block.caption} />;
-      case 'video':
-        return <VideoBlock key={index} src={block.content} title={block.caption} />;
-      case 'tweet':
-        return (
-          <div key={index} className="flex justify-center my-4">
-            <TwitterTweetEmbed tweetId={block.content} />
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -78,7 +111,7 @@ const ArticleFullPage = () => {
           </p>
         )}
         <div className="prose prose-lg mx-auto">
-          {article.content.map((block, index) => renderBlock(block, index))}
+          {memoizedContent}
         </div>
       </div>
     </div>
