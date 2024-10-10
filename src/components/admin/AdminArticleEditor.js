@@ -334,21 +334,21 @@ const AdminArticleEditor = () => {
                     className="w-full sm:w-1/2"
                   />
                 </div>
-                <div className="flex items-center space-x-4">
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
                   <Input
                     type="text"
                     value={article.author}
                     onChange={(e) => setArticle(prev => ({ ...prev, author: e.target.value }))}
                     placeholder="Author"
-                    className="w-full"
+                    className="w-full w-full sm:w-1/2"
                   />
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center w-full sm:w-1/2">
                     <Switch
                       id="main-featured"
                       checked={article.isMainFeatured}
                       onCheckedChange={handleIsMainFeaturedChange}
                     />
-                    <label htmlFor="main-featured">Main Featured</label>
+                    <label htmlFor="main-featured" className='px-2'>Main Featured Article</label>
                   </div>
                 </div>
 
