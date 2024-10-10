@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Card } from '../ui/card';
 import { Play, Pause, Volume2, VolumeX, Maximize } from 'lucide-react';
 
@@ -8,33 +8,43 @@ const VideoBlock = ({ src, title }) => {
   const [error, setError] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [videoSrc, setVideoSrc] = useState(null);
   const videoRef = useRef(null);
   const containerRef = useRef(null);
 
-  useEffect(() => {
-    console.log("Video source:", src); // Debugging log
-    const video = videoRef.current;
-    if (video) {
-      const handleError = (e) => {
-        console.error("Video error:", e);
-        setError("Error loading video. Please check the video source.");
-        setIsLoaded(false);
-      };
-      const handleLoaded = () => {
-        console.log("Video loaded successfully"); // Debugging log
-        setIsLoaded(true);
-        setError(null);
-      };
-      
-      video.addEventListener('error', handleError);
-      video.addEventListener('loadeddata', handleLoaded);
-      
-      return () => {
-        video.removeEventListener('error', handleError);
-        video.removeEventListener('loadeddata', handleLoaded);
-      };
+  const cleanupVideoSrc = useCallback(() => {
+    if (videoSrc && videoSrc.startsWith('blob:')) {
+      URL.revokeObjectURL(videoSrc);
     }
-  }, [src]);
+  }, [videoSrc]);
+
+  useEffect(() => {
+    const loadVideo = async () => {
+      if (src.startsWith('blob:')) {
+        setVideoSrc(src);
+      } else {
+        try {
+          const response = await fetch(src, { 
+            mode: 'cors',
+            credentials: 'omit'
+          });
+          if (!response.ok) throw new Error('Failed to fetch video');
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          setVideoSrc(url);
+          setIsLoaded(true);
+        } catch (error) {
+          console.error('Error loading video:', error);
+          setError('Failed to load video. Please try again later.');
+          setVideoSrc(null);
+        }
+      }
+    };
+
+    loadVideo();
+
+    return cleanupVideoSrc;
+  }, [src, cleanupVideoSrc]);
 
   useEffect(() => {
     // Reset error state when src changes
@@ -107,8 +117,14 @@ const VideoBlock = ({ src, title }) => {
     return string && (string.startsWith('http') || string.startsWith('data:video'));
   };
 
-  // Determine the video source
-  const videoSrc = isValidVideoSource(src) ? src : null;
+  // Use the existing videoSrc state instead of declaring a new constant
+  useEffect(() => {
+    if (isValidVideoSource(src)) {
+      setVideoSrc(src);
+    } else {
+      setVideoSrc(null);
+    }
+  }, [src]);
 
   console.log("Rendered video source:", videoSrc); // Debugging log
 
@@ -191,8 +207,8 @@ const VideoBlock = ({ src, title }) => {
             )}
           </>
         ) : (
-          <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative" role="alert">
-            <span className="block sm:inline">No valid video source provided. Please check the video URL.</span>
+          <div className="bg-gray-100 border border-gray-400 text-gray-700 px-4 py-3 rounded relative" role="alert">
+            <span className="block sm:inline">Loading video...</span>
           </div>
         )}
       </div>
