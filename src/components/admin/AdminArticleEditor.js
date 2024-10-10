@@ -118,22 +118,22 @@ const AdminArticleEditor = () => {
   const handleFileUpload = (id, event, isMainImage = false) => {
     const file = event.target.files[0];
     if (file) {
-      if (isMainImage) {
-        setArticle(prev => ({ ...prev, mainImage: URL.createObjectURL(file) }));
-      } else {
-        const fileType = file.type.split('/')[0];
-        if (fileType === 'video') {
-          const videoUrl = URL.createObjectURL(file);
-          console.log('Video URL created:', videoUrl);
-          updateBlock(id, { content: videoUrl, file: file });
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (isMainImage) {
+          setArticle(prev => ({ ...prev, mainImage: reader.result }));
         } else {
-          const reader = new FileReader();
-          reader.onloadend = () => {
+          const fileType = file.type.split('/')[0];
+          if (fileType === 'video') {
+            const videoUrl = URL.createObjectURL(file);
+            console.log('Video URL created:', videoUrl);
+            updateBlock(id, { content: videoUrl, file: file });
+          } else {
             updateBlock(id, { content: reader.result });
-          };
-          reader.readAsDataURL(file);
+          }
         }
-      }
+      };
+      reader.readAsDataURL(file);
     }
   };
 
