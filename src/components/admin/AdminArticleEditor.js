@@ -205,7 +205,8 @@ const AdminArticleEditor = () => {
         maxBodyLength: Infinity
       });
       console.log('Video upload response:', response.data);
-      return response.data.videoUrl;
+      // Assuming multiple videos can be uploaded
+      return response.data.videoUrls[0]; // Update as needed
     } catch (error) {
       console.error('Error uploading video:', error);
       if (error.response) {
@@ -235,7 +236,7 @@ const AdminArticleEditor = () => {
         return block;
       }));
 
-      const response = await axios.post('https://news-backend-delta.vercel.app/api/articles', {
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/articles`, {
         ...article,
         content: updatedContent,
         status: status,
