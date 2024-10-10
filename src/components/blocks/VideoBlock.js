@@ -12,6 +12,13 @@ const VideoBlock = React.memo(({ src, title }) => {
   const videoRef = useRef(null);
   const containerRef = useRef(null);
 
+  const handleVideoError = useCallback((e) => {
+    const videoElement = e.target;
+    const error = videoElement.error;
+    console.error('Video Error:', error);
+    setError(`Video Error: ${error.message} (Code: ${error.code})`);
+  }, []);
+
   const loadVideo = useCallback(async () => {
     setError(null);
     setIsLoaded(false);
@@ -34,18 +41,28 @@ const VideoBlock = React.memo(({ src, title }) => {
 
   useEffect(() => {
     loadVideo();
+
     return () => {
       if (videoSrc) {
         URL.revokeObjectURL(videoSrc);
       }
     };
-  }, [src, loadVideo]);
+  }, [src, loadVideo, videoSrc]);
 
   useEffect(() => {
-    // Reset error and loaded state when src changes
-    setError(null);
-    setIsLoaded(false);
-  }, [src]);
+    const videoElement = videoRef.current;
+    if (videoElement) {
+      videoElement.addEventListener('error', handleVideoError);
+      videoElement.addEventListener('loadedmetadata', () => setIsLoaded(true));
+    }
+
+    return () => {
+      if (videoElement) {
+        videoElement.removeEventListener('error', handleVideoError);
+        videoElement.removeEventListener('loadedmetadata', () => setIsLoaded(true));
+      }
+    };
+  }, [handleVideoError]);
 
   const playVideo = () => {
     if (videoRef.current.paused) {
