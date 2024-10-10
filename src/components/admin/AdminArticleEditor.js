@@ -71,6 +71,8 @@ const AdminArticleEditor = () => {
         }
         break;
       case BlockTypes.TEXT:
+        newBlock = { id: Date.now().toString(), type, content: '' };
+        break;
       case BlockTypes.IMAGE:
       case BlockTypes.VIDEO:
         newBlock = { id: Date.now().toString(), type, content: null, file: null };
@@ -153,7 +155,7 @@ const AdminArticleEditor = () => {
       case BlockTypes.TEXT:
         return (
           <textarea
-            value={block.content}
+            value={block.content || ''}
             onChange={(e) => updateBlock(block.id, { content: e.target.value })}
             placeholder="Enter text content"
             className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
