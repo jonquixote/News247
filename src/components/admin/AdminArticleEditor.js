@@ -117,8 +117,14 @@ const AdminArticleEditor = () => {
   const handleVideoUpload = (id, event) => {
     const file = event.target.files[0];
     if (file && file.type.startsWith('video/')) {
-      const videoUrl = URL.createObjectURL(file);
-      updateBlock(id, { content: videoUrl, file: file });
+      uploadVideoToS3(file)
+        .then(videoUrl => {
+          updateBlock(id, { content: videoUrl, file: undefined });
+        })
+        .catch(error => {
+          console.error('Error uploading video:', error);
+          alert('Failed to upload video. Please try again.');
+        });
     }
   };
 
@@ -181,8 +187,8 @@ const AdminArticleEditor = () => {
           <Input
             type="text"
             value={block.content}
-            onChange={(e) => updateBlock(block.id, { content: e.target.value })}
-            placeholder="Enter Tweet URL or ID"
+            placeholder="Enter Tweet ID or URL"
+            disabled
             className="w-full"
           />
         );
@@ -205,8 +211,7 @@ const AdminArticleEditor = () => {
         maxBodyLength: Infinity
       });
       console.log('Video upload response:', response.data);
-      // Assuming multiple videos can be uploaded
-      return response.data.videoUrls[0]; // Update as needed
+      return response.data.videoUrls[0]; // Assuming single upload; adjust if multiple
     } catch (error) {
       console.error('Error uploading video:', error);
       if (error.response) {
