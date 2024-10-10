@@ -3,12 +3,8 @@
 @tailwind utilities;
 
 @keyframes spin {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
   }
   
   .animate-spin {
@@ -22,4 +18,61 @@
 
 .animate-fade-in {
   animation: fadeIn 0.5s ease-in forwards;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.animate-pulse {
+  animation: shimmer 2s infinite linear;
+  background: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
+  background-size: 1000px 100%;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.video-loader-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.video-loader {
+  width: 100px;
+  height: 100px;
+  animation: spin 4s linear infinite;
+}
+
+.loader-circle {
+  fill: none;
+  stroke: #3498db;
+  stroke-width: 5;
+  stroke-dasharray: 283;
+  stroke-dashoffset: 280;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.loader-film-strip {
+  fill: #3498db;
+  opacity: 0.7;
+}
+
+.loader-sprocket {
+  fill: white;
+}
+
+.loader-play {
+  fill: #3498db;
+  animation: pulse 2s ease-in-out infinite alternate;
 }

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Card } from '../ui/card';
 import { Play, Pause, Volume2, VolumeX, Maximize } from 'lucide-react';
+import VideoLoader from '../ui/VideoLoader';
 
 const VideoBlock = ({ src, title }) => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -210,7 +211,7 @@ const VideoBlock = ({ src, title }) => {
             </video>
             {!isLoaded && (
               <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
-                <span className="text-gray-500">Loading video...</span>
+                <VideoLoader />
               </div>
             )}
             {!isPlaying && isLoaded && !isFullscreen && (

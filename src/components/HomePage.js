@@ -5,7 +5,6 @@ import { Card, CardContent } from './ui/card';
 import { ChevronRight } from 'lucide-react';
 import ImageCarouselCard from './ui/imagecarouselcard';
 import VideoCard from './ui/video-card';
-import { GridLoader } from 'react-spinners';
 
 // Import your images and videos here
 import newsImage1 from '../media/newsImage1.png';
@@ -98,6 +97,38 @@ const carouselImages = [
   carousel2,
 ];
 
+const ShimmerLoader = () => (
+  <div className="animate-pulse bg-gray-200 h-full w-full"></div>
+);
+
+const FeaturedCardLoader = () => (
+  <Card className="h-full overflow-hidden rounded-lg relative">
+    <ShimmerLoader />
+    <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black to-transparent">
+      <div className="h-12 bg-gray-300 rounded w-3/4 mb-2"></div>
+      <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+    </div>
+  </Card>
+);
+
+const StackedCardLoader = () => (
+  <Card className="h-[300px] md:h-auto flex flex-col overflow-hidden">
+    {[1, 2, 3].map((index) => (
+      <div key={index} className="flex-1 border-b border-gray-200 last:border-b-0">
+        <div className="flex h-full">
+          <div className="w-1/3">
+            <ShimmerLoader />
+          </div>
+          <div className="w-2/3 p-2 flex flex-col justify-center">
+            <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+            <div className="h-3 bg-gray-300 rounded w-1/2"></div>
+          </div>
+        </div>
+      </div>
+    ))}
+  </Card>
+);
+
 const HomePage = () => {
   const navigate = useNavigate();
   const [mainFeaturedArticle, setMainFeaturedArticle] = useState(null);
@@ -137,9 +168,7 @@ const HomePage = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <div className="md:col-span-2">
             {isLoading ? (
-              <Card className="h-full flex items-center justify-center">
-                <GridLoader color="#4A90E2" />
-              </Card>
+              <FeaturedCardLoader />
             ) : mainFeaturedArticle ? (
               <Card className="h-full overflow-hidden rounded-lg relative cursor-pointer opacity-0 animate-fade-in" onClick={() => navigateToArticle(mainFeaturedArticle._id)}>
                 <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black to-transparent text-white z-10">
@@ -159,39 +188,39 @@ const HomePage = () => {
             )}
           </div>
           {/* Stacked Featured Articles Section */}
-          <Card className="h-[300px] md:h-auto flex flex-col overflow-hidden">
-            {isLoading ? (
-              <div className="flex-1 flex items-center justify-center">
-                <GridLoader color="#4A90E2" />
-              </div>
-            ) : stackedFeaturedArticles.length > 0 ? (
-              stackedFeaturedArticles.map((article) => (
-                <div 
-                  key={article._id} 
-                  className="flex-1 overflow-hidden cursor-pointer border-b border-gray-200 last:border-b-0 opacity-0 animate-fade-in"
-                  onClick={() => navigateToArticle(article._id)}
-                >
-                  <div className="flex h-full">
-                    <div className="w-1/3">
-                      <img 
-                        src={article.mainImage} 
-                        alt={article.title} 
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="w-2/3 p-2 flex flex-col justify-center">
-                      <h3 className="text-sm font-semibold mb-1 line-clamp-2">{article.title}</h3>
-                      <p className="text-xs text-gray-500">By {article.author}</p>
+          {isLoading ? (
+            <StackedCardLoader />
+          ) : (
+            <Card className="h-[300px] md:h-auto flex flex-col overflow-hidden">
+              {stackedFeaturedArticles.length > 0 ? (
+                stackedFeaturedArticles.map((article) => (
+                  <div 
+                    key={article._id} 
+                    className="flex-1 overflow-hidden cursor-pointer border-b border-gray-200 last:border-b-0 opacity-0 animate-fade-in"
+                    onClick={() => navigateToArticle(article._id)}
+                  >
+                    <div className="flex h-full">
+                      <div className="w-1/3">
+                        <img 
+                          src={article.mainImage} 
+                          alt={article.title} 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="w-2/3 p-2 flex flex-col justify-center">
+                        <h3 className="text-sm font-semibold mb-1 line-clamp-2">{article.title}</h3>
+                        <p className="text-xs text-gray-500">By {article.author}</p>
+                      </div>
                     </div>
                   </div>
+                ))
+              ) : (
+                <div className="flex-1 flex items-center justify-center">
+                  <p>No recent articles available</p>
                 </div>
-              ))
-            ) : (
-              <div className="flex-1 flex items-center justify-center">
-                <p>No recent articles available</p>
-              </div>
-            )}
-          </Card>
+              )}
+            </Card>
+          )}
         </div>
       </section>
 
