@@ -82,6 +82,9 @@ const NewsApp = () => {
           <Route path="/admin" element={<AdminArticleEditor />} />
           <Route path="/admin/articles" element={<AdminArticleListPage />} /> {/* Add the new route */}
           <Route path="/admin/edit/:id" element={<AdminArticleEditor />} /> {/* Add Edit route */}
+          <Route path="/admin/articles/:id" element={<AdminArticleEditor />} />
+          <Route path="/admin/articles/new" element={<AdminArticleEditor />} />
+          <Route path="/articles/:id" element={<ArticleFullPage />} />
         </Routes>
       </div>
     </Router>

@@ -277,11 +277,9 @@ const AdminArticleEditor = () => {
 
       let response;
       if (id) {
-        // Update existing article
         response = await axios.patch(`${process.env.REACT_APP_API_URL}/api/articles/${id}`, articleToSave);
         console.log('Article updated:', response.data);
       } else {
-        // Create new article
         response = await axios.post(`${process.env.REACT_APP_API_URL}/api/articles`, articleToSave);
         console.log('Article created:', response.data);
       }
@@ -289,7 +287,7 @@ const AdminArticleEditor = () => {
       if (status === 'published') {
         setPublishStatus('published');
         setTimeout(() => {
-          navigate(`/articles/${response.data._id}`);
+          navigate(`/admin/articles/${response.data._id}`);
         }, 3000);
       } else {
         navigate('/admin/articles');
