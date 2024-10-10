@@ -4,7 +4,7 @@ import axios from 'axios';
 import TextBlock from './blocks/TextBlock';
 import ImageBlock from './blocks/ImageBlock';
 import VideoBlock from './blocks/VideoBlock';
-import TweetBlock from './blocks/TweetBlock';
+import { TwitterTweetEmbed } from 'react-twitter-embed';
 
 const REACT_APP_API_URL = "https://news-backend-delta.vercel.app";
 
@@ -44,7 +44,11 @@ const ArticleFullPage = () => {
       case 'video':
         return <VideoBlock key={index} src={block.content} title={block.caption} />;
       case 'tweet':
-        return <TweetBlock key={index} tweetId={block.content} />;
+        return (
+          <div key={index} className="flex justify-center my-4">
+            <TwitterTweetEmbed tweetId={block.content} />
+          </div>
+        );
       default:
         return null;
     }
