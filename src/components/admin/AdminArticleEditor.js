@@ -54,7 +54,7 @@ const AdminArticleEditor = () => {
       case BlockTypes.TEXT:
       case BlockTypes.IMAGE:
       case BlockTypes.VIDEO:
-        newBlock = { id: Date.now().toString(), type, content: '', file: null };
+        newBlock = { id: Date.now().toString(), type, content: null, file: null };
         break;
       default:
         console.error("Unknown block type:", type);
@@ -114,17 +114,18 @@ const AdminArticleEditor = () => {
     }
   };
 
-  const handleVideoUpload = (id, event) => {
+  const handleVideoUpload = (event, blockId) => {
     const file = event.target.files[0];
-    if (file && file.type.startsWith('video/')) {
-      uploadVideoToS3(file)
-        .then(videoUrl => {
-          updateBlock(id, { content: videoUrl, file: undefined });
-        })
-        .catch(error => {
-          console.error('Error uploading video:', error);
-          alert('Failed to upload video. Please try again.');
-        });
+    if (file) {
+      const localUrl = URL.createObjectURL(file);
+      setArticle(prev => ({
+        ...prev,
+        content: prev.content.map(block =>
+          block.id === blockId
+            ? { ...block, content: localUrl, file: file }
+            : block
+        )
+      }));
     }
   };
 
@@ -167,7 +168,7 @@ const AdminArticleEditor = () => {
             <input
               type="file"
               accept="video/*"
-              onChange={(e) => handleVideoUpload(block.id, e)}
+              onChange={(e) => handleVideoUpload(e, block.id)}
               className="mb-2"
             />
             {block.content && (
@@ -202,7 +203,6 @@ const AdminArticleEditor = () => {
     formData.append('video', file);
 
     try {
-      console.log('Uploading video to:', `${process.env.REACT_APP_API_URL}/api/uploadvideo`);
       const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/uploadvideo`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -210,19 +210,9 @@ const AdminArticleEditor = () => {
         maxContentLength: Infinity,
         maxBodyLength: Infinity
       });
-      console.log('Video upload response:', response.data);
-      return response.data.videoUrls[0]; // Assuming single upload; adjust if multiple
+      return response.data.videoUrl;
     } catch (error) {
       console.error('Error uploading video:', error);
-      if (error.response) {
-        console.error('Error response:', error.response.data);
-        console.error('Error status:', error.response.status);
-        console.error('Error headers:', error.response.headers);
-      } else if (error.request) {
-        console.error('Error request:', error.request);
-      } else {
-        console.error('Error message:', error.message);
-      }
       throw error;
     }
   };
@@ -233,24 +223,28 @@ const AdminArticleEditor = () => {
 
   const saveArticle = async (status) => {
     try {
+      // Upload videos to S3 and update content
       const updatedContent = await Promise.all(article.content.map(async (block) => {
         if (block.type === BlockTypes.VIDEO && block.file) {
           const videoUrl = await uploadVideoToS3(block.file);
-          return { ...block, content: videoUrl, file: undefined };
+          return { ...block, content: videoUrl, file: null };
         }
         return block;
       }));
 
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/articles`, {
+      const articleToSave = {
         ...article,
         content: updatedContent,
-        status: status,
-      });
-      console.log(`Article ${status === 'draft' ? 'saved' : 'published'}:`, response.data);
-      alert(`Article ${status === 'draft' ? 'saved as draft' : 'published'} successfully!`);
+        status: status
+      };
+
+      // Save article to database
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/articles`, articleToSave);
+      console.log('Article saved:', response.data);
+      // Handle successful save (e.g., show a success message, redirect, etc.)
     } catch (error) {
-      console.error(`Error ${status === 'draft' ? 'saving' : 'publishing'} article:`, error);
-      alert(`Error ${status === 'draft' ? 'saving' : 'publishing'} article. Please try again.`);
+      console.error('Error saving article:', error);
+      // Handle error (e.g., show error message to user)
     }
   };
 
