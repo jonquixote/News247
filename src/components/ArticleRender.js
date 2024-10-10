@@ -11,7 +11,7 @@ const ArticleRenderer = ({ article }) => {
       case 'text':
         return <TextBlock key={block.id} content={block.content} />;
       case 'image':
-        return <ImageBlock key={block.id} src={block.content} alt={block.alt || "Article image"} caption={block.caption} />;
+        return <ImageBlock key={block.id} src={block.content} alt={block.alt || "Article image"} caption={block.caption} isFullPage={false} />;
       case 'video':
         console.log("Rendering video block:", block);
         return block.content ? (
@@ -22,7 +22,9 @@ const ArticleRenderer = ({ article }) => {
       case 'tweet':
         return (
           <div key={block.id} className="flex justify-center my-4">
-            <TwitterTweetEmbed tweetId={block.content} />
+            <div style={{ maxWidth: '500px', width: '100%' }}>
+              <TwitterTweetEmbed tweetId={block.content} options={{ width: '100%' }} />
+            </div>
           </div>
         );
       default:
