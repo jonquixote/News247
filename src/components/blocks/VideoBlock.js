@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Card } from '../ui/card';
 import { Play, Pause, Volume2, VolumeX, Maximize } from 'lucide-react';
-import Plyr from 'react-plyr';
-import 'plyr/dist/plyr.css';
+import Plyr from 'plyr-react';
+import 'plyr-react/plyr.css';
 import VideoLoader from '../ui/VideoLoader';
 
 const VideoBlock = ({ src, title, poster }) => {
