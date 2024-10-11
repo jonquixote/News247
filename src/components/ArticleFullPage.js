@@ -48,7 +48,7 @@ const ArticleFullPage = () => {
             key={block.id}
             src={block.content}
             title={block.caption}
-            poster={block.poster || '.././public/logo512.png'}
+            poster={block.poster || '../media/logo512.png'}
           />
         );
       case 'tweet':
