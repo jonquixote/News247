@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import TextBlock from './blocks/TextBlock';
 import ImageBlock from './blocks/ImageBlock';
-import VideoBlock from './blocks/VideoBlock';
+import LazyVideoBlock from './blocks/LazyVideoBlock'; // Updated import
 import { TwitterTweetEmbed } from 'react-twitter-embed';
 import VideoLoader from './ui/VideoLoader';
 
@@ -44,10 +44,11 @@ const ArticleFullPage = () => {
         );
       case 'video':
         return (
-          <VideoBlock
+          <LazyVideoBlock
             key={block.id}
             src={block.content}
             title={block.caption}
+            poster={block.poster || '.././public/logo512.png'}
           />
         );
       case 'tweet':
