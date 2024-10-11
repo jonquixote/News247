@@ -18,10 +18,13 @@ const ArticleFullPage = () => {
     const fetchArticle = async () => {
       try {
         const response = await axios.get(`${REACT_APP_API_URL}/api/articles/${id}`);
+        console.log('Article data:', response.data);
+        // Log video blocks specifically
+        const videoBlocks = response.data.content.filter(block => block.type === 'video');
+        console.log('Video blocks:', videoBlocks);
         setArticle(response.data);
       } catch (error) {
-        console.error('Error fetching article:', error);
-        setError('Failed to load article. Please try again later.');
+        console.error("Error fetching article:", error);
       }
     };
 
@@ -49,6 +52,7 @@ const ArticleFullPage = () => {
             src={block.content}
             title={block.caption}
             poster={block.poster}
+            blockId={block.id}
           />
         );
       case 'tweet':

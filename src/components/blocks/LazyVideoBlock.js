@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import VideoBlock from './VideoBlock';
 
-const LazyVideoBlock = ({ src, title, poster }) => {
+const LazyVideoBlock = ({ src, title, poster, blockId }) => {
   const [isVisible, setIsVisible] = useState(false);
   const containerRef = useRef(null);
 
@@ -30,7 +30,7 @@ const LazyVideoBlock = ({ src, title, poster }) => {
   return (
     <div ref={containerRef}>
       {isVisible ? (
-        <VideoBlock src={src} title={title} poster={poster} />
+        <VideoBlock src={src} title={title} poster={poster} blockId={blockId} />
       ) : (
         <div className="relative w-full h-0" style={{ paddingBottom: '56.25%' }}>
           <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
