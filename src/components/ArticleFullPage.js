@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import TextBlock from './blocks/TextBlock';
 import ImageBlock from './blocks/ImageBlock';
 import VideoBlock from './blocks/VideoBlock'; // Updated import
 import { TwitterTweetEmbed } from 'react-twitter-embed';
-import VideoLoader from './ui/VideoLoader';
 
 const REACT_APP_API_URL = "https://news-backend-delta.vercel.app";
 
@@ -18,13 +17,10 @@ const ArticleFullPage = () => {
     const fetchArticle = async () => {
       try {
         const response = await axios.get(`${REACT_APP_API_URL}/api/articles/${id}`);
-        console.log('Article data:', response.data);
-        // Log video blocks specifically
-        const videoBlocks = response.data.content.filter(block => block.type === 'video');
-        console.log('Video blocks:', videoBlocks);
         setArticle(response.data);
       } catch (error) {
         console.error("Error fetching article:", error);
+        setError("Failed to load article.");
       }
     };
 
@@ -32,7 +28,6 @@ const ArticleFullPage = () => {
   }, [id]);
 
   const renderBlock = useCallback((block) => {
-    console.log("Rendering block:", block); // This log is crucial
     switch (block.type) {
       case 'text':
         return <TextBlock key={block.id} content={block.content} />;
@@ -53,7 +48,6 @@ const ArticleFullPage = () => {
             src={block.content}
             title={block.title || block.caption}
             poster={block.poster}
-            blockId={block._id}
           />
         );
       case 'tweet':
@@ -71,11 +65,6 @@ const ArticleFullPage = () => {
         return null;
     }
   }, []);
-
-  const memoizedContent = useMemo(() => {
-    if (!article) return null;
-    return article.content.map(renderBlock);
-  }, [article, renderBlock]);
 
   if (error) {
     return <div className="container mx-auto px-4 py-8 text-center text-red-600">{error}</div>;
@@ -109,7 +98,7 @@ const ArticleFullPage = () => {
           </p>
         )}
         <div className="prose prose-lg mx-auto">
-          {memoizedContent}
+          {article.content.map(renderBlock)}
         </div>
       </div>
     </div>

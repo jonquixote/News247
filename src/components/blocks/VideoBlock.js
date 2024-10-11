@@ -13,12 +13,13 @@ const VideoBlock = ({ src, title, poster }) => {
     );
   }
 
+  // Plyr configuration
   const plyrProps = {
     source: {
       type: 'video',
       sources: [
         {
-          src: src,
+          src: src, // Use the direct video URL here
           type: 'video/mp4',
         },
       ],
