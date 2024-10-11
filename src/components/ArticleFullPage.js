@@ -5,6 +5,7 @@ import TextBlock from './blocks/TextBlock';
 import ImageBlock from './blocks/ImageBlock';
 import VideoBlock from './blocks/VideoBlock';
 import { TwitterTweetEmbed } from 'react-twitter-embed';
+import VideoLoader from './ui/VideoLoader';
 
 const REACT_APP_API_URL = "https://news-backend-delta.vercel.app";
 
