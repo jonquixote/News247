@@ -32,6 +32,7 @@ const ArticleFullPage = () => {
   }, [id]);
 
   const renderBlock = useCallback((block) => {
+    console.log('Rendering block:', block);
     switch (block.type) {
       case 'text':
         return <TextBlock key={block.id} content={block.content} />;
@@ -50,7 +51,7 @@ const ArticleFullPage = () => {
           <LazyVideoBlock
             key={block.id}
             src={block.content}
-            title={block.caption}
+            title={block.title || block.caption}
             poster={block.poster}
             blockId={block.id}
           />

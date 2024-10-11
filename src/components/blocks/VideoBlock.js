@@ -6,6 +6,7 @@ import VideoLoader from '../ui/VideoLoader';
 const VideoBlock = ({ src, title, poster, blockId }) => {
   const [error, setError] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [videoSrc, setVideoSrc] = useState(src);
   const containerRef = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
   const videoRef = useRef(null);
@@ -35,11 +36,27 @@ const VideoBlock = ({ src, title, poster, blockId }) => {
   }, []);
 
   useEffect(() => {
+    if (src.startsWith('blob:')) {
+      // If it's a blob URL, we need to fetch it and create a new blob URL
+      fetch(src)
+        .then(response => response.blob())
+        .then(blob => {
+          const url = URL.createObjectURL(blob);
+          setVideoSrc(url);
+        })
+        .catch(err => {
+          console.error('Error fetching blob:', err);
+          setError('Error loading video');
+        });
+    }
+  }, [src]);
+
+  useEffect(() => {
     if (isVisible && videoRef.current) {
       const videoElement = videoRef.current;
 
       const handleLoadedData = () => {
-        console.log('Video loaded');
+        console.log('Video loaded successfully');
         setIsLoaded(true);
         setError(null);
       };
@@ -60,12 +77,22 @@ const VideoBlock = ({ src, title, poster, blockId }) => {
     }
   }, [isVisible]);
 
-  console.log('VideoBlock props:', { src, title, poster, blockId });
+  console.log('VideoBlock props:', { src: videoSrc, title, poster, blockId });
+
+  if (!videoSrc) {
+    console.error('Invalid video source');
+    return (
+      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+        <strong className="font-bold">Error:</strong>
+        <span className="block sm:inline"> Invalid video source</span>
+      </div>
+    );
+  }
 
   const plyrProps = {
     source: {
       type: 'video',
-      sources: [{ src, type: 'video/mp4' }],
+      sources: [{ src: videoSrc, type: 'video/mp4' }],
     },
     options: {
       controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen'],
@@ -89,7 +116,7 @@ const VideoBlock = ({ src, title, poster, blockId }) => {
         <>
           <Plyr {...plyrProps}>
             <video ref={videoRef} poster={poster}>
-              <source src={src} type="video/mp4" />
+              <source src={videoSrc} type="video/mp4" />
             </video>
           </Plyr>
           {!isLoaded && (
