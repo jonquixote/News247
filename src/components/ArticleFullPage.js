@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import TextBlock from './blocks/TextBlock';
 import ImageBlock from './blocks/ImageBlock';
-import LazyVideoBlock from './blocks/LazyVideoBlock'; // Updated import
+import VideoBlock from './blocks/VideoBlock'; // Updated import
 import { TwitterTweetEmbed } from 'react-twitter-embed';
 import VideoLoader from './ui/VideoLoader';
 
@@ -32,7 +32,7 @@ const ArticleFullPage = () => {
   }, [id]);
 
   const renderBlock = useCallback((block) => {
-    console.log('Rendering block:', block);
+    console.log("Rendering block:", block); // This log is crucial
     switch (block.type) {
       case 'text':
         return <TextBlock key={block.id} content={block.content} />;
@@ -48,12 +48,12 @@ const ArticleFullPage = () => {
         );
       case 'video':
         return (
-          <LazyVideoBlock
-            key={block.id}
+          <VideoBlock
+            key={block._id}
             src={block.content}
             title={block.title || block.caption}
             poster={block.poster}
-            blockId={block.id}
+            blockId={block._id}
           />
         );
       case 'tweet':
