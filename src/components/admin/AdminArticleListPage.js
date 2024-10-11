@@ -66,10 +66,10 @@ const AdminArticleListPage = () => {
         {articles.map(article => (
           <Card key={article._id}>
             <CardHeader>
-              <CardTitle>{article.title}</CardTitle>
+              <CardTitle>{article.title || 'Untitled'}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p>{article.tagline}</p>
+              <p>{article.tagline || 'No tagline'}</p>
               <div className="flex space-x-2 mt-4">
                 <Link to={`/admin/edit/${article._id}`}>
                   <Button variant="outline" className="flex items-center">

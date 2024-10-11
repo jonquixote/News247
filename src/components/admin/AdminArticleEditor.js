@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { motion } from 'framer-motion';
 import ArticleRenderer from '../ArticleRender';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
@@ -9,6 +10,7 @@ import { GripVertical, X } from 'lucide-react';
 import axios from 'axios';
 import VideoCard from '../ui/video-card';
 import { useParams, useNavigate } from 'react-router-dom';
+import ErrorBoundary from '../ErrorBoundary';
 
 const BlockTypes = {
   TEXT: 'text',
@@ -26,10 +28,17 @@ const AdminArticleEditor = () => {
     mainImage: '',
     author: '',
     content: [],
-    isMainFeatured: false
+    isMainFeatured: false,
   });
 
   const [publishStatus, setPublishStatus] = useState('idle'); // 'idle', 'publishing', 'published'
+  const [isDragDropEnabled, setIsDragDropEnabled] = useState(false);
+  const [isDragDropMounted, setIsDragDropMounted] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+  const [newBlockType, setNewBlockType] = useState(null);
+  const [newBlockContent, setNewBlockContent] = useState(null);
+  const [newBlockPreview, setNewBlockPreview] = useState('');
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (id) {
@@ -47,46 +56,75 @@ const AdminArticleEditor = () => {
     }
   }, [id]);
 
+  useEffect(() => {
+    const timer = setTimeout(() => setIsDragDropMounted(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    // Short delay to ensure the component is fully mounted
+    const timer = setTimeout(() => setIsDragDropEnabled(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    setIsReady(true);
+  }, []);
+
   const addBlock = (type) => {
-    let newBlock;
-    switch (type) {
-      case BlockTypes.TWEET:
-        const tweetInput = prompt("Enter the Tweet ID or Tweet URL:");
-        if (tweetInput) {
-          let tweetId;
-          if (tweetInput.includes('twitter.com') || tweetInput.includes('x.com')) {
-            // Extract tweet ID from URL using regex
-            const match = tweetInput.match(/\/status\/(\d+)/);
-            tweetId = match ? match[1] : null;
-          } else {
-            // Assume the input is already a tweet ID
-            tweetId = tweetInput;
-          }
-          if (tweetId) {
-            newBlock = { id: Date.now().toString(), type, content: tweetId };
-          } else {
-            alert("Invalid Tweet ID or URL");
-            return;
-          }
-        } else {
-          return; // User cancelled the prompt
-        }
-        break;
-      case BlockTypes.TEXT:
-        newBlock = { id: Date.now().toString(), type, content: '' };
-        break;
-      case BlockTypes.IMAGE:
-      case BlockTypes.VIDEO:
-        newBlock = { id: Date.now().toString(), type, content: null, file: null };
-        break;
-      default:
-        console.error("Unknown block type:", type);
-        return;
+    setNewBlockType(type);
+    setNewBlockContent(null);
+    setNewBlockPreview('');
+  };
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewBlockContent({
+          name: file.name,
+          type: file.type,
+          data: reader.result // This will be the base64 data
+        });
+      };
+      reader.readAsDataURL(file);
     }
-    setArticle(prev => ({
-      ...prev,
-      content: [...prev.content, newBlock]
-    }));
+  };
+
+  const extractTweetId = (url) => {
+    const twitterRegex = /twitter\.com\/\w+\/status\/(\d+)/;
+    const xRegex = /x\.com\/\w+\/status\/(\d+)/;
+    const twitterMatch = url.match(twitterRegex);
+    const xMatch = url.match(xRegex);
+    return twitterMatch ? twitterMatch[1] : xMatch ? xMatch[1] : url;
+  };
+
+  const submitNewBlock = () => {
+    if (newBlockContent) {
+      let content = newBlockContent;
+      if (newBlockType === 'tweet') {
+        content = extractTweetId(content);
+      } else if (newBlockType === 'image' || newBlockType === 'video') {
+        // Ensure we're storing the entire object, including the base64 data
+        content = {
+          name: newBlockContent.name,
+          type: newBlockContent.type,
+          data: newBlockContent.data
+        };
+      }
+      const newBlock = {
+        id: `block-${Date.now()}`,
+        type: newBlockType,
+        content: content,
+      };
+      setArticle(prev => ({
+        ...prev,
+        content: [...prev.content, newBlock],
+      }));
+      setNewBlockType(null);
+      setNewBlockContent(null);
+    }
   };
 
   const updateBlock = (id, updates) => {
@@ -98,10 +136,10 @@ const AdminArticleEditor = () => {
     }));
   };
 
-  const removeBlock = (id) => {
-    setArticle(prev => ({
-      ...prev,
-      content: prev.content.filter(block => block.id !== id)
+  const deleteBlock = (indexToDelete) => {
+    setArticle(prevArticle => ({
+      ...prevArticle,
+      content: prevArticle.content.filter((_, index) => index !== indexToDelete)
     }));
   };
 
@@ -112,7 +150,7 @@ const AdminArticleEditor = () => {
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
 
-    setArticle(prev => ({ ...prev, content: items }));
+    setArticle(prev => ({...prev, content: items}));
   };
 
   const handleFileUpload = (id, event, isMainImage = false) => {
@@ -124,12 +162,16 @@ const AdminArticleEditor = () => {
           setArticle(prev => ({ ...prev, mainImage: reader.result }));
         } else {
           const fileType = file.type.split('/')[0];
+          const content = {
+            name: file.name,
+            type: file.type,
+            data: reader.result
+          };
           if (fileType === 'video') {
             const videoUrl = URL.createObjectURL(file);
-            console.log('Video URL created:', videoUrl);
-            updateBlock(id, { content: videoUrl, file: file });
+            updateBlock(id, { content, file, videoUrl });
           } else {
-            updateBlock(id, { content: reader.result });
+            updateBlock(id, { content });
           }
         }
       };
@@ -145,7 +187,7 @@ const AdminArticleEditor = () => {
         ...prev,
         content: prev.content.map(block =>
           block.id === blockId
-            ? { ...block, content: localUrl, file: file }
+            ? { ...block, content: localUrl, file: file, videoBucket: null, videoKey: null }
             : block
         )
       }));
@@ -173,8 +215,8 @@ const AdminArticleEditor = () => {
               onChange={(e) => handleFileUpload(block.id, e)}
               className="mb-2"
             />
-            {block.content && (
-              <img src={block.content} alt="Uploaded content" className="max-w-full h-auto mb-2" />
+            {block.content && block.content.data && (
+              <img src={block.content.data} alt="Uploaded content" className="max-w-full h-auto mb-2" />
             )}
             <Input
               type="text"
@@ -191,11 +233,11 @@ const AdminArticleEditor = () => {
             <input
               type="file"
               accept="video/*"
-              onChange={(e) => handleVideoUpload(e, block.id)}
+              onChange={(e) => handleFileUpload(block.id, e)}
               className="mb-2"
             />
-            {block.content && (
-              <VideoCard title={block.title || "Video Preview"} videoSrc={block.content} />
+            {block.videoUrl && (
+              <VideoCard title={block.title || "Video Preview"} videoSrc={block.videoUrl} />
             )}
             <Input
               type="text"
@@ -222,11 +264,6 @@ const AdminArticleEditor = () => {
   };
 
   const uploadVideoToS3 = async (file) => {
-    if (!file) {
-      console.error('No file provided for upload');
-      return null;
-    }
-
     const formData = new FormData();
     formData.append('video', file);
 
@@ -235,12 +272,13 @@ const AdminArticleEditor = () => {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-        maxContentLength: Infinity,
-        maxBodyLength: Infinity
       });
-      
+
       if (response.data && response.data.bucket && response.data.key) {
-        return { bucket: response.data.bucket, key: response.data.key };
+        return {
+          bucket: response.data.bucket,
+          key: response.data.key
+        };
       } else {
         console.error('Unexpected response format:', response.data);
         return null;
@@ -259,30 +297,64 @@ const AdminArticleEditor = () => {
     if (status === 'published') {
       setPublishStatus('publishing');
     }
+    
+    if (!article.title.trim()) {
+      console.error('Title is required');
+      setPublishStatus('idle');
+      // Show an error message to the user
+      return;
+    }
+
     try {
-      // Upload videos to S3 and update content
-      const updatedContent = await Promise.all(article.content.map(async (block) => {
-        if (block.type === BlockTypes.VIDEO && block.file) {
-          const videoData = await uploadVideoToS3(block.file);
+      // Process content before saving
+      const processedContent = await Promise.all(article.content.map(async (block) => {
+        if (block.type === 'video' && block.content && block.content.data) {
+          // Convert base64 to Blob
+          const byteCharacters = atob(block.content.data.split(',')[1]);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          const blob = new Blob([byteArray], { type: block.content.type });
+          
+          // Create a File object
+          const file = new File([blob], block.content.name, { type: block.content.type });
+          
+          const videoData = await uploadVideoToS3(file);
           if (videoData) {
-            return { 
-              ...block, 
-              videoBucket: videoData.bucket, 
+            return {
+              type: block.type,
+              content: '', // Set content to empty string for videos
+              videoBucket: videoData.bucket,
               videoKey: videoData.key,
-              file: null 
+              title: block.title || ''
             };
           }
+          return null; // If upload fails, remove this block
+        } else if (block.type === 'image') {
+          return {
+            type: block.type,
+            content: block.content.data, // This should be the base64 string
+            caption: block.caption || ''
+          };
+        } else if (block.type === 'text') {
+          return {
+            type: block.type,
+            content: block.content
+          };
         }
-        return block;
+        return null; // Remove any unrecognized block types
       }));
+
+      // Filter out any null values (failed uploads or unrecognized types)
+      const filteredContent = processedContent.filter(block => block !== null);
 
       const articleToSave = {
         ...article,
-        content: updatedContent,
+        content: filteredContent,
         status
       };
-
-      console.log('Article data being sent to server:', JSON.stringify(articleToSave, null, 2));
 
       let response;
       if (id) {
@@ -311,132 +383,214 @@ const AdminArticleEditor = () => {
     }
   };
 
+  const renderInputField = () => {
+    switch (newBlockType) {
+      case 'text':
+        return (
+          <textarea
+            value={newBlockContent || ''}
+            onChange={(e) => setNewBlockContent(e.target.value)}
+            placeholder="Enter your text here"
+            className="w-full p-2 border rounded"
+          />
+        );
+      case 'image':
+      case 'video':
+        return (
+          <>
+            <input
+              type="file"
+              accept={newBlockType === 'image' ? 'image/*' : 'video/*'}
+              onChange={handleFileChange}
+              ref={fileInputRef}
+              className="w-full p-2 border rounded"
+            />
+            {newBlockPreview && (
+              <div className="mt-2">
+                {newBlockType === 'image' ? (
+                  <img src={newBlockPreview} alt="Preview" className="max-w-full h-auto" />
+                ) : (
+                  <video src={newBlockPreview} controls className="max-w-full h-auto" />
+                )}
+              </div>
+            )}
+          </>
+        );
+      case 'tweet':
+        return (
+          <input
+            type="text"
+            value={newBlockContent || ''}
+            onChange={(e) => setNewBlockContent(e.target.value)}
+            placeholder="Enter tweet URL"
+            className="w-full p-2 border rounded"
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
+  console.log('Rendering AdminArticleEditor', article);
+
+  if (!isReady) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <div className="admin-article-editor w-full max-w-[1400px] mx-auto p-4 sm:p-6">
-      <div className="lg:flex lg:space-x-6 space-y-6 lg:space-y-0">
-        <div className="lg:w-1/2 w-full">
-          <Card>
-            <CardHeader>
-              <CardTitle>Create New Article</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <label className="block mb-2">Main Image</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleFileUpload(null, e, true)}
-                    className="mb-2"
-                  />
-                </div>
-                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-                  <Input
-                    type="text"
-                    value={article.title}
-                    onChange={(e) => setArticle(prev => ({ ...prev, title: e.target.value }))}
-                    placeholder="Article Title"
-                    className="w-full sm:w-1/2"
-                  />
-                  <Input
-                    type="text"
-                    value={article.tagline}
-                    onChange={(e) => setArticle(prev => ({ ...prev, tagline: e.target.value }))}
-                    placeholder="Article Tagline"
-                    className="w-full sm:w-1/2"
-                  />
-                </div>
-                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-                  <Input
-                    type="text"
-                    value={article.author}
-                    onChange={(e) => setArticle(prev => ({ ...prev, author: e.target.value }))}
-                    placeholder="Author"
-                    className="w-full w-full sm:w-1/2"
-                  />
-                  <div className="flex items-center w-full sm:w-1/2">
-                    <Switch
-                      id="main-featured"
-                      checked={article.isMainFeatured}
-                      onCheckedChange={handleIsMainFeaturedChange}
+    <DragDropContext onDragEnd={onDragEnd}>
+      <div className="admin-article-editor w-full max-w-[1400px] mx-auto p-4 sm:p-6">
+        <div className="lg:flex lg:space-x-6 space-y-6 lg:space-y-0">
+          <div className="lg:w-1/2 w-full">
+            <Card>
+              <CardHeader>
+                <CardTitle>Create New Article</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block mb-2">Main Image</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileUpload(null, e, true)}
+                      className="mb-2"
                     />
-                    <label htmlFor="main-featured" className='px-2'>Main Featured Article</label>
+                  </div>
+                  <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                    <Input
+                      type="text"
+                      value={article.title}
+                      onChange={(e) => setArticle(prev => ({ ...prev, title: e.target.value }))}
+                      placeholder="Article Title"
+                      className="w-full sm:w-1/2"
+                    />
+                    <Input
+                      type="text"
+                      value={article.tagline}
+                      onChange={(e) => setArticle(prev => ({ ...prev, tagline: e.target.value }))}
+                      placeholder="Article Tagline"
+                      className="w-full sm:w-1/2"
+                    />
+                  </div>
+                  <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                    <Input
+                      type="text"
+                      value={article.author}
+                      onChange={(e) => setArticle(prev => ({ ...prev, author: e.target.value }))}
+                      placeholder="Author"
+                      className="w-full w-full sm:w-1/2"
+                    />
+                    <div className="flex items-center w-full sm:w-1/2">
+                      <Switch
+                        id="main-featured"
+                        checked={article.isMainFeatured}
+                        onCheckedChange={handleIsMainFeaturedChange}
+                      />
+                      <label htmlFor="main-featured" className='px-2'>Main Featured Article</label>
+                    </div>
+                  </div>
+
+                  <ErrorBoundary>
+                    {isDragDropEnabled ? (
+                      <Droppable droppableId="article-blocks">
+                        {(provided, snapshot) => (
+                          <div
+                            {...provided.droppableProps}
+                            ref={provided.innerRef}
+                            className="min-h-[100px] border border-gray-300 p-4 rounded bg-gray-100"
+                          >
+                            {article.content.map((block, index) => {
+                              console.log('Rendering block:', block.id, index);
+                              return (
+                                <Draggable key={block.id} draggableId={block.id} index={index}>
+                                  {(provided, snapshot) => (
+                                    <div
+                                      ref={provided.innerRef}
+                                      {...provided.draggableProps}
+                                      className="bg-white border border-gray-200 p-4 mb-2 rounded shadow-sm flex items-center"
+                                    >
+                                      <div
+                                        {...provided.dragHandleProps}
+                                        className="mr-3 text-gray-400 hover:text-gray-600 cursor-move"
+                                      >
+                                        ⋮⋮
+                                      </div>
+                                      <div className="flex-grow">
+                                        {[renderBlockContent(block)]} {/* Wrap in an array */}
+                                      </div>
+                                    </div>
+                                  )}
+                                </Draggable>
+                              );
+                            })}
+                            {provided.placeholder}
+                          </div>
+                        )}
+                      </Droppable>
+                    ) : (
+                      <div>Loading drag and drop functionality...</div>
+                    )}
+                  </ErrorBoundary>
+
+                  <div className="mb-4">
+                    <button onClick={() => addBlock('text')} className="mr-2 px-4 py-2 bg-blue-500 text-white rounded">Add Text</button>
+                    <button onClick={() => addBlock('image')} className="mr-2 px-4 py-2 bg-green-500 text-white rounded">Add Image</button>
+                    <button onClick={() => addBlock('video')} className="mr-2 px-4 py-2 bg-red-500 text-white rounded">Add Video</button>
+                    <button onClick={() => addBlock('tweet')} className="mr-2 px-4 py-2 bg-purple-500 text-white rounded">Add Tweet</button>
+                  </div>
+                  {newBlockType && (
+                    <div className="mb-4">
+                      <h3 className="text-lg font-semibold mb-2">Add New {newBlockType.charAt(0).toUpperCase() + newBlockType.slice(1)}</h3>
+                      {renderInputField()}
+                      <button onClick={submitNewBlock} className="mt-2 px-4 py-2 bg-indigo-500 text-white rounded">Add Block</button>
+                    </div>
+                  )}
+
+                  <div className="flex justify-end space-x-2 mt-6">
+                    <Button onClick={() => saveArticle('draft')} variant="outline" className="w-full">Save Draft</Button>
+                    <Button 
+                      onClick={() => saveArticle('published')}
+                      variant={'outline'}
+                      className={`w-full ${publishStatus === 'publishing' ? 'animate-spin' : ''} ${publishStatus === 'published' ? 'bg-green-500' : ''}`}
+                      disabled={publishStatus !== 'idle'}
+                    >
+                      {publishStatus === 'idle' && 'Publish Article'}
+                      {publishStatus === 'publishing' && '🌐'}
+                      {publishStatus === 'published' && 'Published!'}
+                    </Button>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          </div>
 
-                <DragDropContext onDragEnd={onDragEnd}>
-                  <Droppable droppableId="blocks">
-                    {(provided) => (
-                      <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4">
-                        {article.content.map((block, index) => (
-                          <Draggable key={block.id} draggableId={block.id} index={index}>
-                            {(provided) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                className="bg-gray-100 p-4 rounded-md relative"
-                              >
-                                <div className="flex items-center mb-2">
-                                  <div {...provided.dragHandleProps} className="mr-2 cursor-move">
-                                    <GripVertical size={20} />
-                                  </div>
-                                  <span className="font-semibold">{block.type.charAt(0).toUpperCase() + block.type.slice(1)}</span>
-                                  <button
-                                    onClick={() => removeBlock(block.id)}
-                                    className="ml-auto text-red-500 hover:text-red-700"
-                                  >
-                                    <X size={20} />
-                                  </button>
-                                </div>
-                                {renderBlockContent(block)}
-                              </div>
-                            )}
-                          </Draggable>
-                        ))}
-                        {provided.placeholder}
-                      </div>
-                    )}
-                  </Droppable>
-                </DragDropContext>
-
-                <div className="flex flex-wrap gap-2">
-                  <Button onClick={() => addBlock(BlockTypes.TEXT)} variant="outline">Add Text</Button>
-                  <Button onClick={() => addBlock(BlockTypes.IMAGE)} variant="outline">Add Image</Button>
-                  <Button onClick={() => addBlock(BlockTypes.VIDEO)} variant="outline">Add Video</Button>
-                  <Button onClick={() => addBlock(BlockTypes.TWEET)} variant="outline">Add Tweet</Button>
-                </div>
-
-                <div className="flex justify-end space-x-2 mt-6">
-                  <Button onClick={() => saveArticle('draft')} variant="outline" className="w-full">Save Draft</Button>
-                  <Button 
-                    onClick={() => saveArticle('published')}
-                    variant={'outline'}
-                    className={`w-full ${publishStatus === 'publishing' ? 'animate-spin' : ''} ${publishStatus === 'published' ? 'bg-green-500' : ''}`}
-                    disabled={publishStatus !== 'idle'}
-                  >
-                    {publishStatus === 'idle' && 'Publish Article'}
-                    {publishStatus === 'publishing' && '🌐'}
-                    {publishStatus === 'published' && 'Published!'}
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="lg:w-1/2 w-full">
+            <Card className="overflow-hidden">
+              <CardHeader>
+                <CardTitle>Preview</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <ArticleRenderer blocks={article.content} />
+              </CardContent>
+            </Card>
+          </div>
         </div>
-
-        <div className="lg:w-1/2 w-full">
-          <Card className="overflow-hidden">
-            <CardHeader>
-              <CardTitle>Preview</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <ArticleRenderer article={article} />
-            </CardContent>
-          </Card>
-        </div>
+        <button onClick={() => console.log(article)}>Log Article</button>
       </div>
-    </div>
+    </DragDropContext>
   );
 };
+
+function dataURItoBlob(dataURI) {
+  const byteString = atob(dataURI.split(',')[1]);
+  const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+  const ab = new ArrayBuffer(byteString.length);
+  const ia = new Uint8Array(ab);
+  for (let i = 0; i < byteString.length; i++) {
+    ia[i] = byteString.charCodeAt(i);
+  }
+  return new Blob([ab], {type: mimeString});
+}
 
 export default AdminArticleEditor;

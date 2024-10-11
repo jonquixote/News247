@@ -98,7 +98,7 @@ const carouselImages = [
 ];
 
 const ShimmerLoader = () => (
-  <div className="animate-pulse bg-gray-200 h-full w-full"></div>
+  <div className="animate-pulse bg-gray-200 h-full w-full absolute inset-0"></div>
 );
 
 const FeaturedCardLoader = () => (
@@ -114,11 +114,10 @@ const FeaturedCardLoader = () => (
 const StackedCardLoader = () => (
   <Card className="h-full flex flex-col overflow-hidden">
     {[1, 2, 3].map((index) => (
-      <div key={index} className="flex-1 border-b border-gray-200 last:border-b-0">
-        <div className="flex h-full">
-          <div className="w-1/3">
-            <ShimmerLoader />
-          </div>
+      <div key={index} className="flex-1 border-b border-gray-200 last:border-b-0 relative">
+        <ShimmerLoader />
+        <div className="flex h-full relative z-10">
+          <div className="w-1/3 bg-gray-300"></div>
           <div className="w-2/3 p-2 flex flex-col justify-center">
             <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
             <div className="h-3 bg-gray-300 rounded w-1/2"></div>
@@ -142,11 +141,9 @@ const HomePage = () => {
       try {
         setIsLoading(true);
         const mainFeaturedResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/articles/featured/main`);
-        console.log('Main featured article response:', mainFeaturedResponse.data);
-        setMainFeaturedArticle(mainFeaturedResponse.data);
-
         const recentArticlesResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/articles?limit=6`);
-        console.log('Recent articles response:', recentArticlesResponse.data);
+        
+        setMainFeaturedArticle(mainFeaturedResponse.data);
         setRecentArticles(recentArticlesResponse.data);
       } catch (error) {
         console.error('Error fetching articles:', error);

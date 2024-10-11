@@ -1,49 +1,86 @@
 import React, { useState, useRef, useEffect } from 'react';
+import axios from 'axios';
 import { Card } from '../ui/card';
 import { Play, Pause, Volume2, VolumeX, Maximize } from 'lucide-react';
 
-const VideoBlock = ({ bucket, keyName, title }) => {
+const VideoBlock = ({ src, title, bucket, keyName, file }) => {
+  console.log('VideoBlock props:', { src, title, bucket, keyName, file });
+  
+  const [videoUrl, setVideoUrl] = useState('');
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [error, setError] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [videoSrc, setVideoSrc] = useState('');
   const videoRef = useRef(null);
   const containerRef = useRef(null);
 
   useEffect(() => {
-    const generatePresignedUrl = async () => {
-      try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/getVideoUrl`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ bucket, key: keyName }),
-        });
-        const data = await response.json();
-        setVideoSrc(data.url);
-      } catch (error) {
-        console.error('Error generating pre-signed URL:', error);
-        setError('Error loading video. Please try again later.');
+    const loadVideo = async () => {
+      if (src) {
+        if (src.startsWith('blob:')) {
+          console.log('Using blob URL:', src);
+          setVideoUrl(src);
+          setIsLoaded(true);
+        } else if (src.startsWith('http') || src.startsWith('https')) {
+          console.log('Using direct URL:', src);
+          setVideoUrl(src);
+          setIsLoaded(true);
+        } else {
+          console.log('Using local file path:', src);
+          setVideoUrl(src);
+          setIsLoaded(true);
+        }
+      } else if (file) {
+        console.log('Using File object:', file);
+        const fileUrl = URL.createObjectURL(file);
+        setVideoUrl(fileUrl);
+        setIsLoaded(true);
+      } else if (bucket && keyName) {
+        console.log('Fetching S3 video URL');
+        try {
+          const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/getVideoUrl`, {
+            bucket,
+            key: keyName
+          });
+          
+          if (response.data && response.data.url) {
+            console.log('Received S3 URL:', response.data.url);
+            setVideoUrl(response.data.url);
+            setIsLoaded(true);
+          } else {
+            console.error('Failed to generate video URL');
+            setError('Failed to generate video URL.');
+          }
+        } catch (err) {
+          console.error('Error generating video URL:', err);
+          setError('Failed to load video. Please try again later.');
+        }
+      } else {
+        console.error('No video source provided');
+        setError('No video source provided.');
       }
     };
 
-    generatePresignedUrl();
-  }, [bucket, keyName]);
+    loadVideo();
+
+    return () => {
+      if (videoUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(videoUrl);
+      }
+    };
+  }, [src, bucket, keyName, file]);
 
   useEffect(() => {
-    console.log("Video source:", videoSrc); // Debugging log
     const video = videoRef.current;
-    if (video && videoSrc) {
+    if (video) {
       const handleError = (e) => {
         console.error("Video error:", e);
         setError("Error loading video. Please check the video source.");
         setIsLoaded(false);
       };
       const handleLoaded = () => {
-        console.log("Video loaded successfully"); // Debugging log
+        console.log("Video loaded successfully");
         setIsLoaded(true);
         setError(null);
       };
@@ -56,13 +93,7 @@ const VideoBlock = ({ bucket, keyName, title }) => {
         video.removeEventListener('loadeddata', handleLoaded);
       };
     }
-  }, [videoSrc]);
-
-  useEffect(() => {
-    // Reset error state when src changes
-    setError(null);
-    setIsLoaded(false);
-  }, [videoSrc]);
+  }, [videoUrl]);
 
   const playVideo = () => {
     if (videoRef.current.paused) {
@@ -124,8 +155,6 @@ const VideoBlock = ({ bucket, keyName, title }) => {
     };
   }, []);
 
-  console.log("Rendered video source:", videoSrc); // Debugging log
-
   return (
     <Card className="overflow-hidden relative" ref={containerRef}>
       <div className="relative">
@@ -139,18 +168,19 @@ const VideoBlock = ({ bucket, keyName, title }) => {
             <strong className="font-bold">Error:</strong>
             <span className="block sm:inline"> {error}</span>
           </div>
-        ) : videoSrc ? (
+        ) : videoUrl ? (
           <>
             <video
               ref={videoRef}
               className={`w-full h-auto ${isFullscreen ? '' : 'object-cover'}`}
-              src={videoSrc}
+              src={videoUrl}
               muted={isMuted}
               loop
               playsInline
               preload="metadata"
               onLoadedMetadata={() => {
                 videoRef.current.currentTime = 0;
+                setIsLoaded(true);
               }}
               style={{ display: isLoaded ? 'block' : 'none' }}
               onClick={isFullscreen ? undefined : () => isPlaying ? pauseVideo() : playVideo()}
@@ -205,8 +235,8 @@ const VideoBlock = ({ bucket, keyName, title }) => {
             )}
           </>
         ) : (
-          <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative" role="alert">
-            <span className="block sm:inline">No valid video source provided. Please check the video URL.</span>
+          <div className="bg-gray-100 border border-gray-400 text-gray-700 px-4 py-3 rounded relative" role="alert">
+            <span className="block sm:inline">Loading video...</span>
           </div>
         )}
       </div>

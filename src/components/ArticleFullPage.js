@@ -3,7 +3,8 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import TextBlock from './blocks/TextBlock';
 import ImageBlock from './blocks/ImageBlock';
-import VideoBlock from './blocks/VideoBlock'; // Updated import
+import VideoBlock from './blocks/VideoBlock';
+import TweetBlock from './blocks/TweetBlock';  // Import the TweetBlock component
 import { TwitterTweetEmbed } from 'react-twitter-embed';
 
 const REACT_APP_API_URL = "https://news-backend-delta.vercel.app";
@@ -16,7 +17,7 @@ const ArticleFullPage = () => {
   useEffect(() => {
     const fetchArticle = async () => {
       try {
-        const response = await axios.get(`${REACT_APP_API_URL}/api/articles/${id}`);
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/articles/${id}`);
         setArticle(response.data);
       } catch (error) {
         console.error("Error fetching article:", error);
@@ -27,14 +28,15 @@ const ArticleFullPage = () => {
     fetchArticle();
   }, [id]);
 
-  const renderBlock = useCallback((block) => {
+  const renderBlock = useCallback((block, index) => {
+    console.log('Rendering block:', block); // Add this line for debugging
     switch (block.type) {
       case 'text':
-        return <TextBlock key={block.id} content={block.content} />;
+        return <TextBlock key={`text-${index}`} content={block.content} />;
       case 'image':
         return (
           <ImageBlock
-            key={block.id}
+            key={`image-${index}`}
             src={block.content}
             alt={block.alt}
             caption={block.caption}
@@ -44,63 +46,39 @@ const ArticleFullPage = () => {
       case 'video':
         return (
           <VideoBlock
-            key={block.id}
+            key={`video-${index}`}
+            src={block.content}
             bucket={block.videoBucket}
             keyName={block.videoKey}
-            title={block.title || "Video"}
+            title={block.title}
           />
         );
       case 'tweet':
         return (
-          <div key={block.id} className="flex justify-center my-4">
-            <div style={{ maxWidth: '400px', width: '100%' }}>
-              <TwitterTweetEmbed
-                tweetId={block.content}
-                options={{ width: '100%' }}
-              />
-            </div>
-          </div>
+          <TweetBlock
+            key={`tweet-${block._id || index}`}
+            tweetId={block.content}
+          />
         );
       default:
+        console.warn(`Unknown block type: ${block.type}`);
         return null;
     }
   }, []);
 
   if (error) {
-    return <div className="container mx-auto px-4 py-8 text-center text-red-600">{error}</div>;
+    return <div className="text-red-500">{error}</div>;
   }
 
   if (!article) {
-    return <div className="container mx-auto px-4 py-8 text-center">Loading...</div>;
+    return <div>Loading...</div>;
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {article.mainImage && (
-        <div className="w-screen h-[40vh] overflow-hidden">
-          <img 
-            src={article.mainImage} 
-            alt={article.title} 
-            className="w-full h-full object-cover"
-          />
-        </div>
-      )}
-      <div className="flex-grow px-4 sm:px-6 lg:px-8 py-8 max-w-4xl mx-auto w-full">
-        <p className="text-sm text-center text-gray-400 mb-2">
-          By {article.author} | {new Date(article.date).toLocaleDateString()}
-        </p>
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl text-center font-semibold mb-2">
-          {article.title}
-        </h1>
-        {article.tagline && (
-          <p className="text-gray-600 text-center text-lg sm:text-xl font-semibold mb-6">
-            {article.tagline}
-          </p>
-        )}
-        <div className="prose prose-lg mx-auto">
-          {article.content.map((block) => renderBlock(block))}
-        </div>
-      </div>
+    <div className="max-w-3xl mx-auto px-4 py-8">
+      <h1 className="text-4xl font-bold mb-4">{article.title}</h1>
+      <p className="text-gray-600 mb-8">{article.tagline}</p>
+      {article.content.map(renderBlock)}
     </div>
   );
 };

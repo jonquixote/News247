@@ -1,29 +1,24 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
+import { Card } from '../ui/card';
+import { TwitterTweetEmbed } from 'react-twitter-embed';
 
 const TweetBlock = ({ tweetId }) => {
-  const tweetRef = useRef(null);
+  if (!tweetId) {
+    return (
+      <Card className="overflow-hidden relative mb-4 p-4">
+        <div className="text-red-500">Error: Tweet ID is missing</div>
+      </Card>
+    );
+  }
 
-  useEffect(() => {
-    // Load Twitter widget script
-    const script = document.createElement('script');
-    script.src = "https://platform.twitter.com/widgets.js";
-    script.async = true;
-    document.body.appendChild(script);
-
-    // Render the tweet
-    if (window.twttr && window.twttr.widgets) {
-      window.twttr.widgets.createTweet(tweetId, tweetRef.current, {
-        align: 'center'
-      });
-    }
-
-    // Cleanup
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, [tweetId]);
-
-  return <div ref={tweetRef} className="tweet-block"></div>;
+  return (
+    <Card className="overflow-hidden relative mb-4 p-4">
+      <TwitterTweetEmbed
+        tweetId={tweetId}
+        options={{ align: 'center' }}
+      />
+    </Card>
+  );
 };
 
 export default TweetBlock;

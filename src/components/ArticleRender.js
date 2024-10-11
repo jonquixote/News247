@@ -1,56 +1,86 @@
 import React from 'react';
-import { TwitterTweetEmbed } from 'react-twitter-embed';
+import VideoBlock from './blocks/VideoBlock';
 import TextBlock from './blocks/TextBlock';
 import ImageBlock from './blocks/ImageBlock';
-import VideoBlock from './blocks/VideoBlock'; // Change this import
+import TweetBlock from './blocks/TweetBlock';  // Import the TweetBlock component
+import { Card } from './ui/card';
+import { TwitterTweetEmbed } from 'react-twitter-embed';
 
-const ArticleRenderer = ({ article }) => {
-  const renderBlock = (block) => {
-    console.log("Rendering block:", block); // Debugging log
-    switch (block.type) {
-      case 'text':
-        return <TextBlock key={block.id} content={block.content} />;
-      case 'image':
-        return <ImageBlock key={block.id} src={block.content} alt={block.alt || "Article image"} caption={block.caption} isFullPage={false} />;
-      case 'video':
-        console.log("Rendering video block:", block);
-        return (
-          <VideoBlock
-            key={block.id}
-            bucket={block.videoBucket}
-            keyName={block.videoKey}
-            title={block.title || "Video"}
-          />
-        );
-      case 'tweet':
-        return (
-          <div key={block.id} className="flex justify-center my-4">
-            <div style={{ maxWidth: '500px', width: '100%' }}>
-              <TwitterTweetEmbed tweetId={block.content} options={{ width: '100%' }} />
-            </div>
-          </div>
-        );
-      default:
-        console.log("Unknown block type:", block.type);
-        return null;
-    }
-  };
+const LoadingBlock = ({ type }) => (
+  <Card className="overflow-hidden relative mb-4">
+    <div className="bg-gray-100 border border-gray-400 text-gray-700 px-4 py-3 rounded relative" role="alert">
+      <span className="block sm:inline">Waiting for {type} source...</span>
+    </div>
+  </Card>
+);
+
+const BlockRenderer = ({ block, index }) => {
+  if (!block || typeof block !== 'object') {
+    console.warn(`Invalid block at index ${index}:`, block);
+    return null;
+  }
+
+  switch (block.type) {
+    case 'text':
+      return <TextBlock key={`text-${block.id || index}`} content={block.content} />;
+    case 'image':
+      console.log('Image block data:', block);
+      if (!block.content) {
+        return <LoadingBlock key={`image-loading-${block.id || index}`} type="image" />;
+      }
+      return (
+        <ImageBlock
+          key={`image-${block.id || index}`}
+          src={typeof block.content === 'object' ? block.content.data : block.content}
+          alt={block.alt || 'Image'}
+          caption={block.caption}
+        />
+      );
+    case 'video':
+      console.log('Video block data:', block);
+      if (!block.content) {
+        return <LoadingBlock key={`video-loading-${block.id || index}`} type="video" />;
+      }
+      return (
+        <VideoBlock
+          key={`video-${block.id || index}`}
+          src={typeof block.content === 'object' ? block.content.data : block.content}
+          title={block.title}
+          bucket={block.videoBucket}
+          keyName={block.videoKey}
+        />
+      );
+    case 'tweet':
+      console.log('Tweet block data:', block);
+      if (!block.content) {
+        console.error('Tweet block is missing content:', block);
+        return <LoadingBlock key={`tweet-error-${block._id || index}`} type="tweet" />;
+      }
+      return (
+        <TweetBlock
+          key={`tweet-${block._id || index}`}
+          tweetId={block.content}
+        />
+      );
+    default:
+      console.warn(`Unknown block type: ${block.type}`);
+      return null;
+  }
+};
+
+const ArticleRenderer = ({ blocks }) => {
+  console.log('Received blocks:', blocks);
+
+  if (!blocks || !Array.isArray(blocks) || blocks.length === 0) {
+    console.warn('ArticleRenderer: blocks prop is invalid or empty');
+    return <div className="article-content">No content available</div>;
+  }
 
   return (
-    <div className="article-content w-full">
-      {article.mainImage && (
-        <div className="-mx-6 -mt-6 mb-6">
-          <img src={article.mainImage} alt={article.title} className="w-full h-2/5 object-cover mb-4" />
-        </div>
-      )}
-      <div className="space-y-6 px-4 sm:px-6">
-        <h1 className="text-2xl sm:text-3xl font-bold mb-2">{article.title}</h1>
-        {article.tagline && (
-          <p className="text-lg sm:text-xl text-gray-600 mb-4">{article.tagline}</p>
-        )}
-        <p className="text-sm sm:text-base text-gray-600 mb-4">By {article.author} | {article.date}</p>
-        {article.content.map(renderBlock)}
-      </div>
+    <div className="article-content">
+      {blocks.map((block, index) => (
+        <BlockRenderer key={block.id || `block-${index}`} block={block} index={index} />
+      ))}
     </div>
   );
 };
