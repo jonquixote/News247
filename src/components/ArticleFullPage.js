@@ -44,10 +44,10 @@ const ArticleFullPage = () => {
       case 'video':
         return (
           <VideoBlock
-            key={block._id}
-            src={block.content}
-            title={block.title || block.caption}
-            poster={block.poster}
+            key={block.id}
+            bucket={block.videoBucket}
+            keyName={block.videoKey}
+            title={block.title || "Video"}
           />
         );
       case 'tweet':
@@ -98,7 +98,7 @@ const ArticleFullPage = () => {
           </p>
         )}
         <div className="prose prose-lg mx-auto">
-          {article.content.map(renderBlock)}
+          {article.content.map((block) => renderBlock(block))}
         </div>
       </div>
     </div>

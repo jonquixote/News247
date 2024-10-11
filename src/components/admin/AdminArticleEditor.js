@@ -239,8 +239,8 @@ const AdminArticleEditor = () => {
         maxBodyLength: Infinity
       });
       
-      if (response.data && response.data.videoUrl) {
-        return response.data.videoUrl;
+      if (response.data && response.data.bucket && response.data.key) {
+        return { bucket: response.data.bucket, key: response.data.key };
       } else {
         console.error('Unexpected response format:', response.data);
         return null;
@@ -263,8 +263,15 @@ const AdminArticleEditor = () => {
       // Upload videos to S3 and update content
       const updatedContent = await Promise.all(article.content.map(async (block) => {
         if (block.type === BlockTypes.VIDEO && block.file) {
-          const videoUrl = await uploadVideoToS3(block.file);
-          return videoUrl ? { ...block, content: videoUrl, file: null } : block;
+          const videoData = await uploadVideoToS3(block.file);
+          if (videoData) {
+            return { 
+              ...block, 
+              videoBucket: videoData.bucket, 
+              videoKey: videoData.key,
+              file: null 
+            };
+          }
         }
         return block;
       }));
@@ -274,6 +281,8 @@ const AdminArticleEditor = () => {
         content: updatedContent,
         status
       };
+
+      console.log('Article data being sent to server:', JSON.stringify(articleToSave, null, 2));
 
       let response;
       if (id) {
@@ -294,6 +303,9 @@ const AdminArticleEditor = () => {
       }
     } catch (error) {
       console.error('Error saving article:', error);
+      if (error.response) {
+        console.error('Server responded with:', error.response.data);
+      }
       setPublishStatus('idle');
       // Handle error (e.g., show error message to user)
     }

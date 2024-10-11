@@ -2,19 +2,41 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Card } from '../ui/card';
 import { Play, Pause, Volume2, VolumeX, Maximize } from 'lucide-react';
 
-const VideoBlock = ({ src, title }) => {
+const VideoBlock = ({ bucket, keyName, title }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [error, setError] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [videoSrc, setVideoSrc] = useState('');
   const videoRef = useRef(null);
   const containerRef = useRef(null);
 
   useEffect(() => {
-    console.log("Video source:", src); // Debugging log
+    const generatePresignedUrl = async () => {
+      try {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/getVideoUrl`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ bucket, key: keyName }),
+        });
+        const data = await response.json();
+        setVideoSrc(data.url);
+      } catch (error) {
+        console.error('Error generating pre-signed URL:', error);
+        setError('Error loading video. Please try again later.');
+      }
+    };
+
+    generatePresignedUrl();
+  }, [bucket, keyName]);
+
+  useEffect(() => {
+    console.log("Video source:", videoSrc); // Debugging log
     const video = videoRef.current;
-    if (video) {
+    if (video && videoSrc) {
       const handleError = (e) => {
         console.error("Video error:", e);
         setError("Error loading video. Please check the video source.");
@@ -34,13 +56,13 @@ const VideoBlock = ({ src, title }) => {
         video.removeEventListener('loadeddata', handleLoaded);
       };
     }
-  }, [src]);
+  }, [videoSrc]);
 
   useEffect(() => {
     // Reset error state when src changes
     setError(null);
     setIsLoaded(false);
-  }, [src]);
+  }, [videoSrc]);
 
   const playVideo = () => {
     if (videoRef.current.paused) {
@@ -101,14 +123,6 @@ const VideoBlock = ({ src, title }) => {
       document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
     };
   }, []);
-
-  // Helper function to determine if the src is a valid URL or data URL
-  const isValidVideoSource = (string) => {
-    return string && (string.startsWith('http') || string.startsWith('data:video'));
-  };
-
-  // Determine the video source
-  const videoSrc = isValidVideoSource(src) ? src : null;
 
   console.log("Rendered video source:", videoSrc); // Debugging log
 

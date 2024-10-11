@@ -2,7 +2,7 @@ import React from 'react';
 import { TwitterTweetEmbed } from 'react-twitter-embed';
 import TextBlock from './blocks/TextBlock';
 import ImageBlock from './blocks/ImageBlock';
-import VideoCard from './ui/video-card';
+import VideoBlock from './blocks/VideoBlock'; // Change this import
 
 const ArticleRenderer = ({ article }) => {
   const renderBlock = (block) => {
@@ -14,10 +14,13 @@ const ArticleRenderer = ({ article }) => {
         return <ImageBlock key={block.id} src={block.content} alt={block.alt || "Article image"} caption={block.caption} isFullPage={false} />;
       case 'video':
         console.log("Rendering video block:", block);
-        return block.content ? (
-          <VideoCard key={block.id} title={block.title || "Video"} videoSrc={block.content} />
-        ) : (
-          <div key={block.id}>No video content available</div>
+        return (
+          <VideoBlock
+            key={block.id}
+            bucket={block.videoBucket}
+            keyName={block.videoKey}
+            title={block.title || "Video"}
+          />
         );
       case 'tweet':
         return (
