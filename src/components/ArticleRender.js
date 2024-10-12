@@ -17,10 +17,20 @@ const LoadingBlock = ({ type }) => (
 
 const BlockRenderer = ({ block, index }) => {
   const [videoSrc, setVideoSrc] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchVideoUrl = async () => {
-      if (block.type === 'video' && block.videoBucket && block.videoKey) {
+      if (block.type !== 'video') {
+        setIsLoading(false);
+        return;
+      }
+
+      console.log('Fetching video URL for block:', block);
+      setIsLoading(true);
+      setVideoSrc(''); // Reset videoSrc at the start of each fetch
+
+      if (block.videoBucket && block.videoKey) {
         try {
           const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/getVideoUrl`, {
             bucket: block.videoBucket,
@@ -28,6 +38,7 @@ const BlockRenderer = ({ block, index }) => {
           });
           
           if (response.data && response.data.url) {
+            console.log('Received S3 URL:', response.data.url);
             setVideoSrc(response.data.url);
           } else {
             console.error('Failed to generate video URL');
@@ -36,21 +47,28 @@ const BlockRenderer = ({ block, index }) => {
           console.error('Error fetching video URL:', err);
         }
       } else if (block.videoUrl) {
+        console.log('Using provided videoUrl:', block.videoUrl);
         setVideoSrc(block.videoUrl);
-      } else if (block.content && block.content.data) {
+      } else if (typeof block.content === 'string' && block.content.startsWith('blob:')) {
+        console.log('Using blob URL as video source:', block.content);
+        setVideoSrc(block.content);
+      } else if (block.content && typeof block.content === 'object' && block.content.data) {
+        console.log('Using content.data as video source');
         setVideoSrc(block.content.data);
+      } else if (typeof block.content === 'string') {
+        console.log('Using content as video source');
+        setVideoSrc(block.content);
+      } else {
+        console.error('No valid video source found in block:', block);
       }
+
+      setIsLoading(false);
     };
 
     fetchVideoUrl();
   }, [block]);
 
-  if (!block || typeof block !== 'object') {
-    console.warn(`Invalid block at index ${index}:`, block);
-    return null;
-  }
-
-  console.log(`Rendering block:`, block); // Keep this for debugging
+  console.log(`Rendering block:`, block);
 
   switch (block.type) {
     case 'text':
@@ -70,8 +88,12 @@ const BlockRenderer = ({ block, index }) => {
       );
     case 'video':
       console.log('Video block data:', block);
-      if (!videoSrc) {
+      if (isLoading) {
         return <LoadingBlock key={`video-loading-${block.id || index}`} type="video" />;
+      }
+      if (!videoSrc) {
+        console.error('No video source available for block:', block);
+        return <div>Error: No video source available</div>;
       }
       return (
         <VideoCard 

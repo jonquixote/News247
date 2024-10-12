@@ -4,16 +4,7 @@ import { Play, Pause, Volume2, VolumeX, Maximize } from 'lucide-react';
 import axios from 'axios';
 
 const VideoCard = ({ title, src, bucket, keyName, file }) => {
-  console.log("VideoCard received props:", { title, src });
-
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [error, setError] = useState(null);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const videoRef = useRef(null);
-  const containerRef = useRef(null);
-  const [videoSrc, setVideoSrc] = useState(src);
+  const [videoSrc, setVideoSrc] = useState('');
 
   useEffect(() => {
     const fetchVideoUrl = async () => {
@@ -25,7 +16,6 @@ const VideoCard = ({ title, src, bucket, keyName, file }) => {
           });
           
           if (response.data && response.data.url) {
-            console.log('Received S3 URL:', response.data.url);
             setVideoSrc(response.data.url);
           } else {
             console.error('Failed to generate video URL');
@@ -43,8 +33,13 @@ const VideoCard = ({ title, src, bucket, keyName, file }) => {
     fetchVideoUrl();
   }, [bucket, keyName, file, src]);
 
-  const safeVideoSrc = typeof videoSrc === 'string' ? videoSrc : '';
-  const isLocalFile = safeVideoSrc.startsWith('blob:') || safeVideoSrc.startsWith('data:');
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [error, setError] = useState(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const videoRef = useRef(null);
+  const containerRef = useRef(null);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -141,7 +136,7 @@ const VideoCard = ({ title, src, bucket, keyName, file }) => {
             <video
               ref={videoRef}
               className={`${isFullscreen ? '' : 'w-full h-full object-cover'}`}
-              src={safeVideoSrc}
+              src={videoSrc}
               muted={isMuted}
               loop
               playsInline
@@ -154,8 +149,8 @@ const VideoCard = ({ title, src, bucket, keyName, file }) => {
               onClick={isFullscreen ? undefined : pauseVideo}
               controls={isFullscreen}
             >
-              <source src={safeVideoSrc} type="video/mp4" />
-              <source src={safeVideoSrc.replace('.mp4', '.webm')} type="video/webm" />
+              <source src={videoSrc} type="video/mp4" />
+              <source src={videoSrc.replace('.mp4', '.webm')} type="video/webm" />
               Your browser does not support the video tag.
             </video>
             {!isLoaded && (
