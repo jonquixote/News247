@@ -1,8 +1,7 @@
 import React from 'react';
-import VideoBlock from './blocks/VideoBlock';
 import TextBlock from './blocks/TextBlock';
 import ImageBlock from './blocks/ImageBlock';
-import TweetBlock from './blocks/TweetBlock';  // Import the TweetBlock component
+import TweetBlock from './blocks/TweetBlock';
 import { Card } from './ui/card';
 import VideoCard from './ui/video-card';
 import { TwitterTweetEmbed } from 'react-twitter-embed';
@@ -21,6 +20,8 @@ const BlockRenderer = ({ block, index }) => {
     return null;
   }
 
+  console.log(`Rendering block:`, block); // Keep this for debugging
+
   switch (block.type) {
     case 'text':
       return <TextBlock key={`text-${block.id || index}`} content={block.content} />;
@@ -38,7 +39,25 @@ const BlockRenderer = ({ block, index }) => {
         />
       );
     case 'video':
-      return <VideoCard title={block.title || "Video Preview"} videoSrc={block.videoUrl} />
+      console.log('Video block data:', block); // Keep this for debugging
+      let videoSrc;
+      if (block.videoBucket && block.videoKey) {
+        videoSrc = `https://${block.videoBucket}.s3.amazonaws.com/${block.videoKey}`;
+      } else if (block.videoUrl) {
+        videoSrc = block.videoUrl;
+      } else if (block.content && block.content.data) {
+        // Assuming content.data is a base64 string for local blob
+        videoSrc = block.content.data;
+      } else {
+        return <LoadingBlock key={`video-loading-${block.id || index}`} type="video" />;
+      }
+      return (
+        <VideoCard 
+          key={`video-${block.id || index}`}
+          title={block.title || "Video"}
+          videoSrc={videoSrc}
+        />
+      );
     case 'tweet':
       console.log('Tweet block data:', block);
       if (!block.content) {

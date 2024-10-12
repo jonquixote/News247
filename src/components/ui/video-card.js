@@ -12,6 +12,7 @@ const VideoCard = ({ title, videoSrc }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const videoRef = useRef(null);
   const containerRef = useRef(null);
+  const safeVideoSrc = typeof videoSrc === 'string' ? videoSrc : '';
 
   const isLocalFile = videoSrc && (videoSrc.startsWith('blob:') || videoSrc.startsWith('data:'));
 
@@ -110,7 +111,7 @@ const VideoCard = ({ title, videoSrc }) => {
             <video
               ref={videoRef}
               className={`${isFullscreen ? '' : 'w-full h-full object-cover'}`}
-              src={videoSrc}
+              src={safeVideoSrc}
               muted={isMuted}
               loop
               playsInline
@@ -123,8 +124,8 @@ const VideoCard = ({ title, videoSrc }) => {
               onClick={isFullscreen ? undefined : pauseVideo}
               controls={isFullscreen}
             >
-              <source src={videoSrc} type="video/mp4" />
-              <source src={videoSrc.replace('.mp4', '.webm')} type="video/webm" />
+              <source src={safeVideoSrc} type="video/mp4" />
+              <source src={safeVideoSrc.replace('.mp4', '.webm')} type="video/webm" />
               Your browser does not support the video tag.
             </video>
             {!isLoaded && (

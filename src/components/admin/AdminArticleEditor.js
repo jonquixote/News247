@@ -72,7 +72,11 @@ const AdminArticleEditor = () => {
   }, []);
 
   const addBlock = (type) => {
-    const newBlock = { id: `block-${Date.now()}`, type, content: '' };
+    const newBlock = { 
+      id: `block-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, 
+      type, 
+      content: type === 'video' ? { data: null, name: null, type: null } : ''
+    };
     setArticle(prev => ({
       ...prev,
       content: [...prev.content, newBlock]
@@ -162,15 +166,17 @@ const AdminArticleEditor = () => {
     }));
   };
 
-  const onDragEnd = (result) => {
-    if (!result.destination) return;
+  const onDragEnd = useCallback((result) => {
+    if (!result.destination) {
+      return;
+    }
 
     const items = Array.from(article.content);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
 
-    setArticle(prev => ({...prev, content: items}));
-  };
+    setArticle(prev => ({ ...prev, content: items }));
+  }, [article.content]);
 
   const handleFileUpload = (id, event, isMainImage = false) => {
     const file = event.target.files[0];
@@ -181,18 +187,27 @@ const AdminArticleEditor = () => {
           setArticle(prev => ({ ...prev, mainImage: reader.result }));
         } else {
           const fileType = file.type.split('/')[0];
-          const content = {
-            name: file.name,
-            type: file.type,
-            data: reader.result
-          };
-          if (fileType === 'video') {
-            const videoUrl = URL.createObjectURL(file);
-            updateBlock(id, { content, file, videoUrl });
+          if (reader.result) {
+            const content = {
+              name: file.name,
+              type: file.type,
+              data: reader.result
+            };
+            if (fileType === 'video') {
+              const videoUrl = URL.createObjectURL(file);
+              updateBlock(id, { content, file, videoUrl });
+            } else {
+              updateBlock(id, { content });
+            }
           } else {
-            updateBlock(id, { content });
+            console.error('Failed to read file');
+            updateBlock(id, { content: null }); // Reset content if file read fails
           }
         }
+      };
+      reader.onerror = (error) => {
+        console.error('Error reading file:', error);
+        updateBlock(id, { content: null }); // Reset content if error occurs
       };
       reader.readAsDataURL(file);
     }
@@ -548,36 +563,27 @@ const AdminArticleEditor = () => {
                   <ErrorBoundary>
                     {isDragDropEnabled ? (
                       <Droppable droppableId="article-blocks">
-                        {(provided, snapshot) => (
+                        {(provided) => (
                           <div
                             {...provided.droppableProps}
                             ref={provided.innerRef}
                             className="min-h-[100px] border border-gray-300 p-4 rounded bg-gray-100"
                           >
-                            {article.content.map((block, index) => {
-                              console.log('Rendering block:', block.id, index);
-                              return (
-                                <Draggable key={block.id} draggableId={block.id} index={index}>
-                                  {(provided, snapshot) => (
-                                    <div
-                                      ref={provided.innerRef}
-                                      {...provided.draggableProps}
-                                      className="bg-white border border-gray-200 p-4 mb-2 rounded shadow-sm flex items-center"
-                                    >
-                                      <div
-                                        {...provided.dragHandleProps}
-                                        className="mr-3 text-gray-400 hover:text-gray-600 cursor-move"
-                                      >
-                                        ⋮⋮
-                                      </div>
-                                      <div className="flex-grow">
-                                        {[renderBlockContent(block)]} {/* Wrap in an array */}
-                                      </div>
-                                    </div>
-                                  )}
-                                </Draggable>
-                              );
-                            })}
+                            {article.content.map((block, index) => (
+                              <Draggable key={block.id} draggableId={block.id} index={index}>
+                                {(provided, snapshot) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    className="bg-white border border-gray-200 p-4 mb-2 rounded shadow-sm"
+                                  >
+                                    {renderBlockContent(block)}
+                                    {/* Add delete button or other controls here */}
+                                  </div>
+                                )}
+                              </Draggable>
+                            ))}
                             {provided.placeholder}
                           </div>
                         )}
