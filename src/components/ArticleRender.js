@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import TextBlock from './blocks/TextBlock';
 import ImageBlock from './blocks/ImageBlock';
 import TweetBlock from './blocks/TweetBlock';
 import { Card } from './ui/card';
 import VideoCard from './ui/video-card';
 import { TwitterTweetEmbed } from 'react-twitter-embed';
+import axios from 'axios';
 
 const LoadingBlock = ({ type }) => (
   <Card className="overflow-hidden relative mb-4">
@@ -15,6 +16,35 @@ const LoadingBlock = ({ type }) => (
 );
 
 const BlockRenderer = ({ block, index }) => {
+  const [videoSrc, setVideoSrc] = useState('');
+
+  useEffect(() => {
+    const fetchVideoUrl = async () => {
+      if (block.type === 'video' && block.videoBucket && block.videoKey) {
+        try {
+          const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/getVideoUrl`, {
+            bucket: block.videoBucket,
+            key: block.videoKey
+          });
+          
+          if (response.data && response.data.url) {
+            setVideoSrc(response.data.url);
+          } else {
+            console.error('Failed to generate video URL');
+          }
+        } catch (err) {
+          console.error('Error fetching video URL:', err);
+        }
+      } else if (block.videoUrl) {
+        setVideoSrc(block.videoUrl);
+      } else if (block.content && block.content.data) {
+        setVideoSrc(block.content.data);
+      }
+    };
+
+    fetchVideoUrl();
+  }, [block]);
+
   if (!block || typeof block !== 'object') {
     console.warn(`Invalid block at index ${index}:`, block);
     return null;
@@ -39,23 +69,17 @@ const BlockRenderer = ({ block, index }) => {
         />
       );
     case 'video':
-      console.log('Video block data:', block); // Keep this for debugging
-      let videoSrc;
-      if (block.videoBucket && block.videoKey) {
-        videoSrc = `https://${block.videoBucket}.s3.amazonaws.com/${block.videoKey}`;
-      } else if (block.videoUrl) {
-        videoSrc = block.videoUrl;
-      } else if (block.content && block.content.data) {
-        // Assuming content.data is a base64 string for local blob
-        videoSrc = block.content.data;
-      } else {
+      console.log('Video block data:', block);
+      if (!videoSrc) {
         return <LoadingBlock key={`video-loading-${block.id || index}`} type="video" />;
       }
       return (
         <VideoCard 
           key={`video-${block.id || index}`}
           title={block.title || "Video"}
-          videoSrc={videoSrc}
+          src={videoSrc}
+          bucket={block.videoBucket}
+          keyName={block.videoKey}
         />
       );
     case 'tweet':

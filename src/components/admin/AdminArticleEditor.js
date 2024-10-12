@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { motion } from 'framer-motion';
 import ArticleRenderer from '../ArticleRender';
+import DragAndDropArticleBlocks from './DragAndDropArticleBlocks';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import Input from '../ui/input';
@@ -267,11 +268,17 @@ const AdminArticleEditor = () => {
             <input
               type="file"
               accept="video/*"
-              onChange={(e) => handleFileUpload(block.id, e)}
+              onChange={(e) => handleVideoUpload(e, block.id)}
               className="mb-2"
             />
-            {block.videoUrl && (
-              <VideoCard title={block.title || "Video Preview"} videoSrc={block.videoUrl} />
+            {(block.videoUrl || block.videoBucket || block.videoKey || block.file) && (
+              <VideoCard 
+                title={block.title || "Video Preview"} 
+                src={block.videoUrl}
+                bucket={block.videoBucket}
+                keyName={block.videoKey}
+                file={block.file}
+              />
             )}
             <Input
               type="text"
@@ -345,37 +352,59 @@ const AdminArticleEditor = () => {
     if (!article.title.trim()) {
       console.error('Title is required');
       setPublishStatus('idle');
-      // Show an error message to the user
       return;
     }
 
     try {
       // Process content before saving
       const processedContent = await Promise.all(article.content.map(async (block) => {
-        if (block.type === 'video' && block.content && block.content.data) {
-          // Convert base64 to Blob
-          const byteCharacters = atob(block.content.data.split(',')[1]);
-          const byteNumbers = new Array(byteCharacters.length);
-          for (let i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i);
-          }
-          const byteArray = new Uint8Array(byteNumbers);
-          const blob = new Blob([byteArray], { type: block.content.type });
-          
-          // Create a File object
-          const file = new File([blob], block.content.name, { type: block.content.type });
-          
-          const videoData = await uploadVideoToS3(file);
-          if (videoData) {
+        if (block.type === 'video') {
+          if (block.file) {
+            // This is a new video that needs to be uploaded
+            const videoData = await uploadVideoToS3(block.file);
+            if (videoData) {
+              return {
+                type: block.type,
+                videoBucket: videoData.bucket,
+                videoKey: videoData.key,
+                title: block.title || ''
+              };
+            }
+            return null; // If upload fails, remove this block
+          } else if (block.videoBucket && block.videoKey) {
+            // This is an existing S3 video, keep as is
             return {
               type: block.type,
-              content: '', // Set content to empty string for videos
-              videoBucket: videoData.bucket,
-              videoKey: videoData.key,
+              videoBucket: block.videoBucket,
+              videoKey: block.videoKey,
               title: block.title || ''
             };
+          } else if (block.videoUrl) {
+            // This is a local video URL that hasn't been uploaded to S3 yet
+            // For drafts, we'll keep the local URL. For published, we'll upload to S3.
+            if (status === 'published') {
+              const response = await fetch(block.videoUrl);
+              const blob = await response.blob();
+              const file = new File([blob], 'video.mp4', { type: 'video/mp4' });
+              const videoData = await uploadVideoToS3(file);
+              if (videoData) {
+                return {
+                  type: block.type,
+                  videoBucket: videoData.bucket,
+                  videoKey: videoData.key,
+                  title: block.title || ''
+                };
+              }
+              return null; // If upload fails, remove this block
+            } else {
+              // For drafts, keep the local URL
+              return {
+                type: block.type,
+                videoUrl: block.videoUrl,
+                title: block.title || ''
+              };
+            }
           }
-          return null; // If upload fails, remove this block
         } else if (block.type === 'image') {
           return {
             type: block.type,
@@ -562,32 +591,10 @@ const AdminArticleEditor = () => {
 
                   <ErrorBoundary>
                     {isDragDropEnabled ? (
-                      <Droppable droppableId="article-blocks">
-                        {(provided) => (
-                          <div
-                            {...provided.droppableProps}
-                            ref={provided.innerRef}
-                            className="min-h-[100px] border border-gray-300 p-4 rounded bg-gray-100"
-                          >
-                            {article.content.map((block, index) => (
-                              <Draggable key={block.id} draggableId={block.id} index={index}>
-                                {(provided, snapshot) => (
-                                  <div
-                                    ref={provided.innerRef}
-                                    {...provided.draggableProps}
-                                    {...provided.dragHandleProps}
-                                    className="bg-white border border-gray-200 p-4 mb-2 rounded shadow-sm"
-                                  >
-                                    {renderBlockContent(block)}
-                                    {/* Add delete button or other controls here */}
-                                  </div>
-                                )}
-                              </Draggable>
-                            ))}
-                            {provided.placeholder}
-                          </div>
-                        )}
-                      </Droppable>
+                      <DragAndDropArticleBlocks 
+                        article={article} 
+                        renderBlockContent={renderBlockContent} 
+                      />
                     ) : (
                       <div>Loading drag and drop functionality...</div>
                     )}

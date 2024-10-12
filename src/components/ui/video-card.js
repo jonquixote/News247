@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Card } from './card';
 import { Play, Pause, Volume2, VolumeX, Maximize } from 'lucide-react';
+import axios from 'axios';
 
-const VideoCard = ({ title, videoSrc }) => {
-  console.log("VideoCard received props:", { title, videoSrc });
+const VideoCard = ({ title, src, bucket, keyName, file }) => {
+  console.log("VideoCard received props:", { title, src });
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -12,9 +13,38 @@ const VideoCard = ({ title, videoSrc }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const videoRef = useRef(null);
   const containerRef = useRef(null);
-  const safeVideoSrc = typeof videoSrc === 'string' ? videoSrc : '';
+  const [videoSrc, setVideoSrc] = useState(src);
 
-  const isLocalFile = videoSrc && (videoSrc.startsWith('blob:') || videoSrc.startsWith('data:'));
+  useEffect(() => {
+    const fetchVideoUrl = async () => {
+      if (bucket && keyName) {
+        try {
+          const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/getVideoUrl`, {
+            bucket,
+            key: keyName
+          });
+          
+          if (response.data && response.data.url) {
+            console.log('Received S3 URL:', response.data.url);
+            setVideoSrc(response.data.url);
+          } else {
+            console.error('Failed to generate video URL');
+          }
+        } catch (err) {
+          console.error('Error fetching video URL:', err);
+        }
+      } else if (file) {
+        setVideoSrc(URL.createObjectURL(file));
+      } else if (src) {
+        setVideoSrc(src);
+      }
+    };
+
+    fetchVideoUrl();
+  }, [bucket, keyName, file, src]);
+
+  const safeVideoSrc = typeof videoSrc === 'string' ? videoSrc : '';
+  const isLocalFile = safeVideoSrc.startsWith('blob:') || safeVideoSrc.startsWith('data:');
 
   useEffect(() => {
     const video = videoRef.current;
