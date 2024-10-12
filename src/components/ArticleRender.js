@@ -4,7 +4,6 @@ import ImageBlock from './blocks/ImageBlock';
 import TweetBlock from './blocks/TweetBlock';
 import { Card } from './ui/card';
 import VideoCard from './ui/video-card';
-import { TwitterTweetEmbed } from 'react-twitter-embed';
 import axios from 'axios';
 
 const LoadingBlock = ({ type }) => (
@@ -123,16 +122,53 @@ const BlockRenderer = ({ block, index }) => {
 };
 
 const ArticleRenderer = ({ blocks }) => {
-  console.log('Received blocks:', blocks);
+  const [processedBlocks, setProcessedBlocks] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  if (!blocks || !Array.isArray(blocks) || blocks.length === 0) {
-    console.warn('ArticleRenderer: blocks prop is invalid or empty');
+  useEffect(() => {
+    const processBlocks = async () => {
+      if (!blocks || !Array.isArray(blocks) || blocks.length === 0) {
+        setIsLoading(false);
+        return;
+      }
+
+      const processed = await Promise.all(blocks.map(async (block) => {
+        if (block.type === 'video' && block.videoBucket && block.videoKey) {
+          try {
+            const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/getVideoUrl`, {
+              bucket: block.videoBucket,
+              key: block.videoKey
+            });
+            
+            if (response.data && response.data.url) {
+              console.log('Received S3 URL:', response.data.url);
+              return { ...block, videoSrc: response.data.url };
+            }
+          } catch (err) {
+            console.error('Error fetching video URL:', err);
+          }
+        }
+        return block;
+      }));
+
+      setProcessedBlocks(processed);
+      setIsLoading(false);
+    };
+
+    processBlocks();
+  }, [blocks]);
+
+  if (isLoading) {
+    return <div>Loading article content...</div>;
+  }
+
+  if (processedBlocks.length === 0) {
     return <div className="article-content">No content available</div>;
   }
 
   return (
     <div className="article-content">
-      {blocks.map((block, index) => (
+      {processedBlocks.map((block, index) => (
         <BlockRenderer key={block.id || `block-${index}`} block={block} index={index} />
       ))}
     </div>

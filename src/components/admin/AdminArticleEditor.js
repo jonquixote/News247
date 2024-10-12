@@ -222,7 +222,7 @@ const AdminArticleEditor = () => {
         ...prev,
         content: prev.content.map(block =>
           block.id === blockId
-            ? { ...block, content: localUrl, file: file, videoBucket: null, videoKey: null }
+            ? { ...block, videoUrl: localUrl, file: file, videoBucket: null, videoKey: null }
             : block
         )
       }));
@@ -352,6 +352,7 @@ const AdminArticleEditor = () => {
     if (!article.title.trim()) {
       console.error('Title is required');
       setPublishStatus('idle');
+      // Show an error message to the user
       return;
     }
 

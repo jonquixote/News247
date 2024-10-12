@@ -5,10 +5,24 @@ import axios from 'axios';
 
 const VideoCard = ({ title, src, bucket, keyName, file }) => {
   const [videoSrc, setVideoSrc] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchVideoUrl = async () => {
-      if (bucket && keyName) {
+    const loadVideo = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      if (src) {
+        if (src.startsWith('blob:') || src.startsWith('http') || src.startsWith('https')) {
+          setVideoSrc(src);
+        } else {
+          setVideoSrc(src);
+        }
+      } else if (file) {
+        const fileUrl = URL.createObjectURL(file);
+        setVideoSrc(fileUrl);
+      } else if (bucket && keyName) {
         try {
           const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/getVideoUrl`, {
             bucket,
@@ -18,24 +32,30 @@ const VideoCard = ({ title, src, bucket, keyName, file }) => {
           if (response.data && response.data.url) {
             setVideoSrc(response.data.url);
           } else {
-            console.error('Failed to generate video URL');
+            setError('Failed to generate video URL');
           }
         } catch (err) {
-          console.error('Error fetching video URL:', err);
+          console.error('Error generating video URL:', err);
+          setError('Failed to load video. Please try again later.');
         }
-      } else if (file) {
-        setVideoSrc(URL.createObjectURL(file));
-      } else if (src) {
-        setVideoSrc(src);
+      } else {
+        setError('No video source provided');
       }
+
+      setIsLoading(false);
     };
 
-    fetchVideoUrl();
-  }, [bucket, keyName, file, src]);
+    loadVideo();
+
+    return () => {
+      if (videoSrc.startsWith('blob:')) {
+        URL.revokeObjectURL(videoSrc);
+      }
+    };
+  }, [src, bucket, keyName, file]);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [error, setError] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const videoRef = useRef(null);
@@ -131,6 +151,10 @@ const VideoCard = ({ title, src, bucket, keyName, file }) => {
             <strong className="font-bold">Error:</strong>
             <span className="block sm:inline"> {error}</span>
           </div>
+        ) : isLoading ? (
+          <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
+            <span className="text-gray-500">Loading video...</span>
+          </div>
         ) : (
           <>
             <video
@@ -144,13 +168,12 @@ const VideoCard = ({ title, src, bucket, keyName, file }) => {
               poster="/api/placeholder/640/360"
               onLoadedMetadata={() => {
                 videoRef.current.currentTime = 0;
+                setIsLoaded(true);
               }}
               style={{ display: isLoaded ? 'block' : 'none' }}
-              onClick={isFullscreen ? undefined : pauseVideo}
+              onClick={isFullscreen ? undefined : () => isPlaying ? pauseVideo() : playVideo()}
               controls={isFullscreen}
             >
-              <source src={videoSrc} type="video/mp4" />
-              <source src={videoSrc.replace('.mp4', '.webm')} type="video/webm" />
               Your browser does not support the video tag.
             </video>
             {!isLoaded && (
