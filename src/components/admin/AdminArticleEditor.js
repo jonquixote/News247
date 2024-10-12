@@ -250,14 +250,25 @@ const AdminArticleEditor = () => {
               onChange={(e) => handleFileUpload(block.id, e)}
               className="mb-2"
             />
-            {block.content && block.content.data && (
-              <img src={block.content.data} alt="Uploaded content" className="max-w-full h-auto mb-2" />
+            {block.content && (
+              <img 
+                src={typeof block.content === 'object' ? block.content.data : block.content}
+                alt="Uploaded content" 
+                className="max-w-full h-auto mb-2" 
+              />
             )}
             <Input
               type="text"
               value={block.caption || ''}
               onChange={(e) => updateBlock(block.id, { caption: e.target.value })}
               placeholder="Image caption (optional)"
+              className="w-full mt-2"
+            />
+            <Input
+              type="text"
+              value={block.alt || ''}
+              onChange={(e) => updateBlock(block.id, { alt: e.target.value })}
+              placeholder="Alt text (optional)"
               className="w-full mt-2"
             />
           </div>
@@ -344,6 +355,30 @@ const AdminArticleEditor = () => {
     setArticle(prev => ({ ...prev, isMainFeatured: checked }));
   };
 
+  // Add this function near your other utility functions in AdminArticleEditor
+  const uploadImageToServer = async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/upload-image`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.data && response.data.url) {
+        return { url: response.data.url };
+      } else {
+        console.error('Image upload failed: No URL in response');
+        return null;
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      return null;
+    }
+  };
+
   const saveArticle = async (status) => {
     if (status === 'published') {
       setPublishStatus('publishing');
@@ -406,12 +441,22 @@ const AdminArticleEditor = () => {
               };
             }
           }
-        } else if (block.type === 'image') {
-          return {
-            type: block.type,
-            content: block.content.data, // This should be the base64 string
-            caption: block.caption || ''
-          };
+        } else if (block.type === BlockTypes.IMAGE) {
+          if (block.content && block.content.data) {
+            // This is an image that's already been processed
+            return {
+              type: block.type,
+              content: block.content.data,
+              caption: block.caption || '',
+              alt: block.alt || ''
+            };
+          } else if (block.content && typeof block.content === 'string') {
+            // This is an already uploaded image, keep as is
+            return block;
+          }
+          // If we reach here, it means the image wasn't properly processed
+          console.error('Image block without proper content:', block);
+          return null;
         } else if (block.type === 'text') {
           return {
             type: block.type,
