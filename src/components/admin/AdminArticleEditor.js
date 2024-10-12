@@ -72,9 +72,11 @@ const AdminArticleEditor = () => {
   }, []);
 
   const addBlock = (type) => {
-    setNewBlockType(type);
-    setNewBlockContent(null);
-    setNewBlockPreview('');
+    const newBlock = { id: `block-${Date.now()}`, type, content: '' };
+    setArticle(prev => ({
+      ...prev,
+      content: [...prev.content, newBlock]
+    }));
   };
 
   const handleFileChange = (event) => {
@@ -92,12 +94,30 @@ const AdminArticleEditor = () => {
     }
   };
 
-  const extractTweetId = (url) => {
-    const twitterRegex = /twitter\.com\/\w+\/status\/(\d+)/;
-    const xRegex = /x\.com\/\w+\/status\/(\d+)/;
-    const twitterMatch = url.match(twitterRegex);
-    const xMatch = url.match(xRegex);
-    return twitterMatch ? twitterMatch[1] : xMatch ? xMatch[1] : url;
+  const extractTweetId = (input) => {
+    if (!input) return '';
+    
+    // Check if the input is already a tweet ID (a string of numbers)
+    if (/^\d+$/.test(input)) {
+      return input;
+    }
+
+    // Try to extract the ID from different Twitter/X URL formats
+    const patterns = [
+      /(?:twitter|x)\.com\/\w+\/status\/(\d+)/,
+      /(?:twitter|x)\.com\/statuses\/(\d+)/,
+      /(?:twitter|x)\.com\/\w+\/tweets\/(\d+)/
+    ];
+
+    for (const pattern of patterns) {
+      const match = input.match(pattern);
+      if (match) {
+        return match[1];
+      }
+    }
+
+    console.warn('Could not extract tweet ID from:', input);
+    return input; // Return the original input if we can't extract an ID
   };
 
   const submitNewBlock = () => {
@@ -106,7 +126,6 @@ const AdminArticleEditor = () => {
       if (newBlockType === 'tweet') {
         content = extractTweetId(content);
       } else if (newBlockType === 'image' || newBlockType === 'video') {
-        // Ensure we're storing the entire object, including the base64 data
         content = {
           name: newBlockContent.name,
           type: newBlockContent.type,
@@ -250,13 +269,23 @@ const AdminArticleEditor = () => {
         );
       case BlockTypes.TWEET:
         return (
-          <Input
-            type="text"
-            value={block.content}
-            placeholder="Enter Tweet ID or URL"
-            disabled
-            className="w-full"
-          />
+          <div>
+            <Input
+              type="text"
+              value={block.content}
+              onChange={(e) => {
+                const tweetId = extractTweetId(e.target.value);
+                updateBlock(block.id, { content: tweetId });
+              }}
+              placeholder="Enter Tweet ID or URL"
+              className="w-full"
+            />
+            {block.content && (
+              <div className="text-sm text-gray-500 mt-1">
+                Extracted Tweet ID: {block.content}
+              </div>
+            )}
+          </div>
         );
       default:
         return null;
@@ -343,6 +372,13 @@ const AdminArticleEditor = () => {
             type: block.type,
             content: block.content
           };
+        } else if (block.type === 'tweet') {
+            const tweetId = extractTweetId(block.content);
+            return {
+              type: block.type,
+              content: tweetId,
+              tweetId: tweetId
+            };
         }
         return null; // Remove any unrecognized block types
       }));
@@ -418,17 +454,35 @@ const AdminArticleEditor = () => {
         );
       case 'tweet':
         return (
-          <input
-            type="text"
-            value={newBlockContent || ''}
-            onChange={(e) => setNewBlockContent(e.target.value)}
-            placeholder="Enter tweet URL"
-            className="w-full p-2 border rounded"
-          />
+          <div>
+            <input
+              type="text"
+              value={newBlockContent || ''}
+              onChange={(e) => {
+                const tweetId = extractTweetId(e.target.value);
+                setNewBlockContent(tweetId);
+              }}
+              placeholder="Enter tweet URL or ID"
+              className="w-full p-2 border rounded"
+            />
+            {newBlockContent && (
+              <div className="text-sm text-gray-500 mt-1">
+                Extracted Tweet ID: {newBlockContent}
+              </div>
+            )}
+          </div>
         );
       default:
         return null;
     }
+  };
+
+  const handleBlockChange = (index, field, value) => {
+    setArticle(prev => {
+      const newContent = [...prev.content];
+      newContent[index] = { ...newContent[index], [field]: value };
+      return { ...prev, content: newContent };
+    });
   };
 
   console.log('Rendering AdminArticleEditor', article);

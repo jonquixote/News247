@@ -4,6 +4,7 @@ import TextBlock from './blocks/TextBlock';
 import ImageBlock from './blocks/ImageBlock';
 import TweetBlock from './blocks/TweetBlock';  // Import the TweetBlock component
 import { Card } from './ui/card';
+import VideoCard from './ui/video-card';
 import { TwitterTweetEmbed } from 'react-twitter-embed';
 
 const LoadingBlock = ({ type }) => (
@@ -37,19 +38,7 @@ const BlockRenderer = ({ block, index }) => {
         />
       );
     case 'video':
-      console.log('Video block data:', block);
-      if (!block.content) {
-        return <LoadingBlock key={`video-loading-${block.id || index}`} type="video" />;
-      }
-      return (
-        <VideoBlock
-          key={`video-${block.id || index}`}
-          src={typeof block.content === 'object' ? block.content.data : block.content}
-          title={block.title}
-          bucket={block.videoBucket}
-          keyName={block.videoKey}
-        />
-      );
+      return <VideoCard title={block.title || "Video Preview"} videoSrc={block.videoUrl} />
     case 'tweet':
       console.log('Tweet block data:', block);
       if (!block.content) {

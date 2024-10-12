@@ -9,15 +9,19 @@ const REACT_APP_API_URL = "https://news-backend-delta.vercel.app";
 const ArticleListPage = () => {
   const [articles, setArticles] = useState([]);
   const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchArticles = async () => {
       try {
+        setIsLoading(true);
         const response = await axios.get(`${REACT_APP_API_URL}/api/articles`);
         setArticles(response.data.sort((a, b) => new Date(b.date) - new Date(a.date)));
       } catch (error) {
         console.error('Error fetching articles:', error);
         setError('Failed to fetch articles. Please try again later.');
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -28,6 +32,10 @@ const ArticleListPage = () => {
     if (!text) return ''; // Return empty string if text is null or undefined
     return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
   };
+
+  if (isLoading) {
+    return <div>Loading articles...</div>;
+  }
 
   if (error) {
     return <div className="text-red-500">{error}</div>;
@@ -52,7 +60,7 @@ const ArticleListPage = () => {
             </div>
             <CardContent className="flex-grow flex flex-col justify-center pt-4 px-4">
               <p className="text-gray-600">
-                {truncateText(article.tagline || article.content[0].content, 100)}...
+                {truncateText(article.tagline || (article.content && article.content[0] && article.content[0].content) || 'No content available', 100)}
                 <Link to={`/article/${article._id}`}>
                   <ChevronRight className="inline ml-1 cursor-pointer" />
                 </Link>

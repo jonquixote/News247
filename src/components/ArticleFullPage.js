@@ -29,7 +29,7 @@ const ArticleFullPage = () => {
   }, [id]);
 
   const renderBlock = useCallback((block, index) => {
-    console.log('Rendering block:', block); // Add this line for debugging
+    console.log('Rendering block:', block);
     switch (block.type) {
       case 'text':
         return <TextBlock key={`text-${index}`} content={block.content} />;
@@ -57,7 +57,7 @@ const ArticleFullPage = () => {
         return (
           <TweetBlock
             key={`tweet-${block._id || index}`}
-            tweetId={block.content}
+            tweetId={block.content || block.tweetId} // Use either content or tweetId
           />
         );
       default:
@@ -79,6 +79,7 @@ const ArticleFullPage = () => {
       <h1 className="text-4xl font-bold mb-4">{article.title}</h1>
       <p className="text-gray-600 mb-8">{article.tagline}</p>
       {article.content.map(renderBlock)}
+      <button onClick={() => console.log(article)}>Log Article</button>
     </div>
   );
 };

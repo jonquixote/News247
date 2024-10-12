@@ -10,15 +10,19 @@ const AdminArticleListPage = () => {
   const [articles, setArticles] = useState([]);
   const [deleteArticleId, setDeleteArticleId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Fetch all articles on component mount
   useEffect(() => {
     const fetchArticles = async () => {
       try {
+        setIsLoading(true);
         const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/articles`);
         setArticles(response.data);
       } catch (error) {
         console.error('Error fetching articles:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -62,28 +66,32 @@ const AdminArticleListPage = () => {
   return (
     <div className="admin-article-list-page w-full max-w-[1400px] mx-auto p-4 sm:p-6">
       <h1 className="text-2xl font-bold mb-4">Admin Article List</h1>
-      <div className="space-y-4">
-        {articles.map(article => (
-          <Card key={article._id}>
-            <CardHeader>
-              <CardTitle>{article.title || 'Untitled'}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>{article.tagline || 'No tagline'}</p>
-              <div className="flex space-x-2 mt-4">
-                <Link to={`/admin/edit/${article._id}`}>
-                  <Button variant="outline" className="flex items-center">
-                    <Edit className="mr-2" /> Edit
+      {isLoading ? (
+        <p>Loading articles...</p>
+      ) : (
+        <div className="space-y-4">
+          {articles.map(article => (
+            <Card key={article._id}>
+              <CardHeader>
+                <CardTitle>{article?.title || 'Untitled'}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>{article?.tagline || 'No tagline'}</p>
+                <div className="flex space-x-2 mt-4">
+                  <Link to={`/admin/edit/${article._id}`}>
+                    <Button variant="outline" className="flex items-center">
+                      <Edit className="mr-2" /> Edit
+                    </Button>
+                  </Link>
+                  <Button variant="destructive" onClick={() => handleDeleteClick(article._id)} className="flex items-center">
+                    <Trash2 className="mr-2" /> Delete
                   </Button>
-                </Link>
-                <Button variant="destructive" onClick={() => handleDeleteClick(article._id)} className="flex items-center">
-                  <Trash2 className="mr-2" /> Delete
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       {isModalOpen && (
