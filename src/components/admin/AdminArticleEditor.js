@@ -39,21 +39,38 @@ const TextBlockEditor = ({ block, index, handleBlockChange }) => {
 };
 
 const ImageBlockEditor = ({ block, index, handleBlockChange }) => {
+  const [localImagePreview, setLocalImagePreview] = useState(
+    block.content && (typeof block.content === 'object' ? block.content.data : block.content)
+  );
+
+  useEffect(() => {
+    setLocalImagePreview(block.content && (typeof block.content === 'object' ? block.content.data : block.content));
+  }, [block.content]);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLocalImagePreview(reader.result);
+        handleBlockChange(index, 'content', { 
+          data: reader.result, 
+          file: file,  // Store the file object for later upload
+          name: file.name, 
+          type: file.type 
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+
   return (
     <div>
       <input
         type="file"
         accept="image/*"
-        onChange={(e) => {
-          const file = e.target.files[0];
-          if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-              handleBlockChange(index, 'content', { data: reader.result, name: file.name, type: file.type });
-            };
-            reader.readAsDataURL(file);
-          }
-        }}
+        onChange={handleImageChange}
         className="w-full p-2 border rounded mb-2"
       />
       <Input
@@ -71,11 +88,13 @@ const ImageBlockEditor = ({ block, index, handleBlockChange }) => {
         className="w-full mt-2 mb-2"
       />
       <div className="mt-2">
-        <ImageBlock
-          src={block.content && (typeof block.content === 'object' ? block.content.data : block.content)}
-          alt={block.alt || 'Image preview'}
-          caption={block.caption}
-        />
+        {localImagePreview && (
+          <ImageBlock
+            src={localImagePreview}
+            alt={block.alt || 'Image preview'}
+            caption={block.caption}
+          />
+        )}
       </div>
     </div>
   );
@@ -311,8 +330,11 @@ const AdminArticleEditor = () => {
         if (i === index) {
           let updatedBlock = { ...block, [field]: value };
           
-          // Handle file uploads
-          if (field === 'file') {
+          if (block.type === 'image' && field === 'content') {
+            // For image blocks, update the content directly
+            updatedBlock.content = value;
+          } else if (field === 'file') {
+            // Handle file uploads for other types (e.g., video)
             const reader = new FileReader();
             reader.onloadend = () => {
               setArticle(prevArticle => ({
@@ -454,10 +476,8 @@ const AdminArticleEditor = () => {
       const formData = new FormData();
       formData.append('image', file);
 
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/upload-image`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/articles/${id}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
 
       if (response.data && response.data.url) {
@@ -534,17 +554,24 @@ const AdminArticleEditor = () => {
               };
             }
           }
-        } else if (block.type === BlockTypes.IMAGE) {
-          if (block.content && block.content.data) {
-            // This is an image that's already been processed
+        } else if (block.type === 'image') {
+          if (block.content && block.content.file) {
+            // This is a new or updated image that needs to be uploaded
+            const reader = new FileReader();
+            const fileDataPromise = new Promise((resolve) => {
+              reader.onloadend = () => resolve(reader.result);
+              reader.readAsDataURL(block.content.file);
+            });
+            const fileData = await fileDataPromise;
+            
             return {
               type: block.type,
-              content: block.content.data,
+              content: fileData,
               caption: block.caption || '',
               alt: block.alt || ''
             };
-          } else if (block.content && typeof block.content === 'string') {
-            // This is an already uploaded image, keep as is
+          } else if (typeof block.content === 'string') {
+            // This is an existing image, keep as is
             return block;
           }
           // If we reach here, it means the image wasn't properly processed
@@ -598,7 +625,6 @@ const AdminArticleEditor = () => {
         console.error('Server responded with:', error.response.data);
       }
       setPublishStatus('idle');
-      // Handle error (e.g., show error message to user)
     }
   };
 
