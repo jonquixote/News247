@@ -1,7 +1,7 @@
 import React from 'react';
 import { Droppable, Draggable } from 'react-beautiful-dnd';
 
-const DragAndDropArticleBlocks = ({ article, renderBlockContent }) => {
+const DragAndDropArticleBlocks = ({ article, renderBlockContent, updateBlock }) => {
   return (
     <Droppable droppableId="article-blocks">
       {(provided) => (
@@ -19,8 +19,7 @@ const DragAndDropArticleBlocks = ({ article, renderBlockContent }) => {
                   {...provided.dragHandleProps}
                   className="bg-white border border-gray-200 p-4 mb-2 rounded shadow-sm"
                 >
-                  {renderBlockContent(block)}
-                  {/* Add delete button or other controls here */}
+                  {renderBlockContent(block, index)}
                 </div>
               )}
             </Draggable>

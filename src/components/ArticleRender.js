@@ -67,7 +67,7 @@ const BlockRenderer = ({ block, index }) => {
     fetchVideoUrl();
   }, [block]);
 
-  console.log(`Rendering block:`, block);
+  console.log(`Rendering block ${index}:`, block);
 
   switch (block.type) {
     case 'text':
@@ -80,7 +80,7 @@ const BlockRenderer = ({ block, index }) => {
       return (
         <ImageBlock
           key={`image-${block.id || index}`}
-          src={typeof block.content === 'object' ? block.content.data : block.content}
+          src={typeof block.content === 'object' && block.content.data ? block.content.data : block.content}
           alt={block.alt || 'Image'}
           caption={block.caption}
         />

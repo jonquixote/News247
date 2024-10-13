@@ -12,12 +12,157 @@ import axios from 'axios';
 import VideoCard from '../ui/video-card';
 import { useParams, useNavigate } from 'react-router-dom';
 import ErrorBoundary from '../ErrorBoundary';
+import TextBlock from '../blocks/TextBlock';
+import ImageBlock from '../blocks/ImageBlock';
+import TweetBlock from '../blocks/TweetBlock';
 
 const BlockTypes = {
   TEXT: 'text',
   IMAGE: 'image',
   VIDEO: 'video',
   TWEET: 'tweet'
+};
+
+const TextBlockEditor = ({ block, index, handleBlockChange }) => {
+  return (
+    <div>
+      <textarea
+        value={block.content}
+        onChange={(e) => handleBlockChange(index, 'content', e.target.value)}
+        className="w-full p-2 border rounded mb-2"
+      />
+      <div className="mt-2 p-2 bg-gray-100 rounded">
+        <TextBlock content={block.content} />
+      </div>
+    </div>
+  );
+};
+
+const ImageBlockEditor = ({ block, index, handleBlockChange }) => {
+  return (
+    <div>
+      <input
+        type="file"
+        accept="image/*"
+        onChange={(e) => {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              handleBlockChange(index, 'content', { data: reader.result, name: file.name, type: file.type });
+            };
+            reader.readAsDataURL(file);
+          }
+        }}
+        className="w-full p-2 border rounded mb-2"
+      />
+      <Input
+        type="text"
+        value={block.caption || ''}
+        onChange={(e) => handleBlockChange(index, 'caption', e.target.value)}
+        placeholder="Image caption (optional)"
+        className="w-full mt-2 mb-2"
+      />
+      <Input
+        type="text"
+        value={block.alt || ''}
+        onChange={(e) => handleBlockChange(index, 'alt', e.target.value)}
+        placeholder="Alt text (optional)"
+        className="w-full mt-2 mb-2"
+      />
+      <div className="mt-2">
+        <ImageBlock
+          src={block.content && (typeof block.content === 'object' ? block.content.data : block.content)}
+          alt={block.alt || 'Image preview'}
+          caption={block.caption}
+        />
+      </div>
+    </div>
+  );
+};
+
+const VideoBlockEditor = ({ block, index, handleBlockChange }) => {
+  return (
+    <div>
+      <input
+        type="file"
+        accept="video/*"
+        onChange={(e) => {
+          const file = e.target.files[0];
+          if (file) {
+            const videoUrl = URL.createObjectURL(file);
+            handleBlockChange(index, 'content', { data: videoUrl, name: file.name, type: file.type });
+            handleBlockChange(index, 'file', file);
+            handleBlockChange(index, 'videoUrl', videoUrl);
+          }
+        }}
+        className="w-full p-2 border rounded mb-2"
+      />
+      <Input
+        type="text"
+        value={block.title || ''}
+        onChange={(e) => handleBlockChange(index, 'title', e.target.value)}
+        placeholder="Video title (optional)"
+        className="w-full mt-2 mb-2"
+      />
+      <div className="mt-2">
+        <VideoCard 
+          title={block.title || "Video Preview"}
+          src={block.videoUrl || (block.content && block.content.data) || ''}
+          bucket={block.videoBucket}
+          keyName={block.videoKey}
+          file={block.file}
+        />
+      </div>
+    </div>
+  );
+};
+
+const TweetBlockEditor = ({ block, index, handleBlockChange }) => {
+  const extractTweetId = (input) => {
+    if (!input) return '';
+    
+    // Check if the input is already a tweet ID (a string of numbers)
+    if (/^\d+$/.test(input)) {
+      return input;
+    }
+
+    // Try to extract the ID from different Twitter/X URL formats
+    const patterns = [
+      /(?:twitter|x)\.com\/\w+\/status\/(\d+)/,
+      /(?:twitter|x)\.com\/statuses\/(\d+)/,
+      /(?:twitter|x)\.com\/\w+\/tweets\/(\d+)/
+    ];
+
+    for (const pattern of patterns) {
+      const match = input.match(pattern);
+      if (match) {
+        return match[1];
+      }
+    }
+
+    console.warn('Could not extract tweet ID from:', input);
+    return input; // Return the original input if we can't extract an ID
+  };
+  const handleTweetInput = (e) => {
+    const tweetId = extractTweetId(e.target.value);
+    handleBlockChange(index, 'content', tweetId);
+  };
+
+  return (
+    <div>
+      <Input
+        type="text"
+        value={block.content || ''}
+        onChange={handleTweetInput}
+        placeholder="Enter Tweet ID or URL"
+        className="w-full p-2 border rounded mb-2"
+      />
+      <div className="mt-2">
+        {block.content && <TweetBlock tweetId={block.content} />}
+      </div>
+    </div>
+  );
 };
 
 const AdminArticleEditor = () => {
@@ -40,6 +185,8 @@ const AdminArticleEditor = () => {
   const [newBlockContent, setNewBlockContent] = useState(null);
   const [newBlockPreview, setNewBlockPreview] = useState('');
   const fileInputRef = useRef(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [blocks, setBlocks] = useState([]);  // Ensure this is initialized as an empty array
 
   useEffect(() => {
     if (id) {
@@ -58,19 +205,25 @@ const AdminArticleEditor = () => {
   }, [id]);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsDragDropMounted(true), 100);
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    // Short delay to ensure the component is fully mounted
-    const timer = setTimeout(() => setIsDragDropEnabled(true), 100);
+    const timer = setTimeout(() => {
+      setIsDragDropMounted(true);
+      setIsDragDropEnabled(true);
+    }, 100);
     return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
     setIsReady(true);
   }, []);
+
+  useEffect(() => {
+    console.log('Current article state:', article);
+  }, [article]);
+
+  useEffect(() => {
+    // This effect runs after the block has been updated
+    setImagePreview(null);
+  }, [article.content]); // Dependency array includes article.content
 
   const addBlock = (type) => {
     const newBlock = { 
@@ -92,8 +245,9 @@ const AdminArticleEditor = () => {
         setNewBlockContent({
           name: file.name,
           type: file.type,
-          data: reader.result // This will be the base64 data
+          data: reader.result
         });
+        setNewBlockPreview(reader.result); // Set preview for image/video
       };
       reader.readAsDataURL(file);
     }
@@ -151,13 +305,33 @@ const AdminArticleEditor = () => {
     }
   };
 
-  const updateBlock = (id, updates) => {
-    setArticle(prev => ({
-      ...prev,
-      content: prev.content.map(block =>
-        block.id === id ? { ...block, ...updates } : block
-      )
-    }));
+  const handleBlockChange = (index, field, value) => {
+    setArticle(prev => {
+      const updatedContent = prev.content.map((block, i) => {
+        if (i === index) {
+          let updatedBlock = { ...block, [field]: value };
+          
+          // Handle file uploads
+          if (field === 'file') {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              setArticle(prevArticle => ({
+                ...prevArticle,
+                content: prevArticle.content.map((b, idx) => 
+                  idx === index ? { ...b, content: { data: reader.result, name: value.name, type: value.type } } : b
+                )
+              }));
+            };
+            reader.readAsDataURL(value);
+            updatedBlock = { ...updatedBlock, file: value };
+          }
+          
+          return updatedBlock;
+        }
+        return block;
+      });
+      return { ...prev, content: updatedContent };
+    });
   };
 
   const deleteBlock = (indexToDelete) => {
@@ -196,19 +370,19 @@ const AdminArticleEditor = () => {
             };
             if (fileType === 'video') {
               const videoUrl = URL.createObjectURL(file);
-              updateBlock(id, { content, file, videoUrl });
+              handleBlockChange(id, { content, file, videoUrl });
             } else {
-              updateBlock(id, { content });
+              handleBlockChange(id, { content });
             }
           } else {
             console.error('Failed to read file');
-            updateBlock(id, { content: null }); // Reset content if file read fails
+            handleBlockChange(id, { content: null }); // Reset content if file read fails
           }
         }
       };
       reader.onerror = (error) => {
         console.error('Error reading file:', error);
-        updateBlock(id, { content: null }); // Reset content if error occurs
+        handleBlockChange(id, { content: null }); // Reset content if error occurs
       };
       reader.readAsDataURL(file);
     }
@@ -229,97 +403,16 @@ const AdminArticleEditor = () => {
     }
   };
 
-  const renderBlockContent = (block) => {
+  const renderBlockContent = (block, index) => {
     switch (block.type) {
-      case BlockTypes.TEXT:
-        return (
-          <textarea
-            value={block.content || ''}
-            onChange={(e) => updateBlock(block.id, { content: e.target.value })}
-            placeholder="Enter text content"
-            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            rows="4"
-          />
-        );
-      case BlockTypes.IMAGE:
-        return (
-          <div>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => handleFileUpload(block.id, e)}
-              className="mb-2"
-            />
-            {block.content && (
-              <img 
-                src={typeof block.content === 'object' ? block.content.data : block.content}
-                alt="Uploaded content" 
-                className="max-w-full h-auto mb-2" 
-              />
-            )}
-            <Input
-              type="text"
-              value={block.caption || ''}
-              onChange={(e) => updateBlock(block.id, { caption: e.target.value })}
-              placeholder="Image caption (optional)"
-              className="w-full mt-2"
-            />
-            <Input
-              type="text"
-              value={block.alt || ''}
-              onChange={(e) => updateBlock(block.id, { alt: e.target.value })}
-              placeholder="Alt text (optional)"
-              className="w-full mt-2"
-            />
-          </div>
-        );
-      case BlockTypes.VIDEO:
-        return (
-          <div>
-            <input
-              type="file"
-              accept="video/*"
-              onChange={(e) => handleVideoUpload(e, block.id)}
-              className="mb-2"
-            />
-            {(block.videoUrl || block.videoBucket || block.videoKey || block.file) && (
-              <VideoCard 
-                title={block.title || "Video Preview"} 
-                src={block.videoUrl}
-                bucket={block.videoBucket}
-                keyName={block.videoKey}
-                file={block.file}
-              />
-            )}
-            <Input
-              type="text"
-              value={block.title || ''}
-              onChange={(e) => updateBlock(block.id, { title: e.target.value })}
-              placeholder="Video title (optional)"
-              className="w-full mt-2"
-            />
-          </div>
-        );
-      case BlockTypes.TWEET:
-        return (
-          <div>
-            <Input
-              type="text"
-              value={block.content}
-              onChange={(e) => {
-                const tweetId = extractTweetId(e.target.value);
-                updateBlock(block.id, { content: tweetId });
-              }}
-              placeholder="Enter Tweet ID or URL"
-              className="w-full"
-            />
-            {block.content && (
-              <div className="text-sm text-gray-500 mt-1">
-                Extracted Tweet ID: {block.content}
-              </div>
-            )}
-          </div>
-        );
+      case 'text':
+        return <TextBlockEditor block={block} index={index} handleBlockChange={handleBlockChange} />;
+      case 'image':
+        return <ImageBlockEditor block={block} index={index} handleBlockChange={handleBlockChange} />;
+      case 'video':
+        return <VideoBlockEditor block={block} index={index} handleBlockChange={handleBlockChange} />;
+      case 'tweet':
+        return <TweetBlockEditor block={block} index={index} handleBlockChange={handleBlockChange} />;
       default:
         return null;
     }
@@ -567,14 +660,6 @@ const AdminArticleEditor = () => {
     }
   };
 
-  const handleBlockChange = (index, field, value) => {
-    setArticle(prev => {
-      const newContent = [...prev.content];
-      newContent[index] = { ...newContent[index], [field]: value };
-      return { ...prev, content: newContent };
-    });
-  };
-
   console.log('Rendering AdminArticleEditor', article);
 
   if (!isReady) {
@@ -636,10 +721,11 @@ const AdminArticleEditor = () => {
                   </div>
 
                   <ErrorBoundary>
-                    {isDragDropEnabled ? (
+                    {isDragDropMounted ? (
                       <DragAndDropArticleBlocks 
                         article={article} 
-                        renderBlockContent={renderBlockContent} 
+                        renderBlockContent={(block, index) => renderBlockContent(block, index)}
+                        updateBlock={handleBlockChange}
                       />
                     ) : (
                       <div>Loading drag and drop functionality...</div>
