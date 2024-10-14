@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Card } from '../ui/card';
 import { Play, Pause, Volume2, VolumeX, Maximize } from 'lucide-react';
 
-const VideoBlock = ({ src, title, bucket, keyName, file }) => {
+const VideoBlock = ({ src, title, bucket, keyName, file, isFullPage = false }) => {
   console.log('VideoBlock props:', { src, title, bucket, keyName, file });
   
   const [videoUrl, setVideoUrl] = useState('');
@@ -182,7 +182,7 @@ const VideoBlock = ({ src, title, bucket, keyName, file }) => {
                 videoRef.current.currentTime = 0;
                 setIsLoaded(true);
               }}
-              style={{ display: isLoaded ? 'block' : 'none' }}
+              style={isLoaded ? { display: 'block', maxWidth: '500px', maxHeight: '500px' } : { display: 'none' }}
               onClick={isFullscreen ? undefined : () => isPlaying ? pauseVideo() : playVideo()}
               controls={isFullscreen}
             >

@@ -167,7 +167,7 @@ const ArticleRenderer = ({ blocks }) => {
   }
 
   return (
-    <div className="article-content">
+    <div className="article-content w-full max-w-full px-4 sm:px-6 lg:px-8 space-y-8 overflow-x-hidden">
       {processedBlocks.map((block, index) => (
         <BlockRenderer key={block.id || `block-${index}`} block={block} index={index} />
       ))}

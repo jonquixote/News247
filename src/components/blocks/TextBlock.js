@@ -20,7 +20,7 @@ const TextBlock = ({ content }) => {
   };
 
   return (
-    <div className="text-block">
+    <div className="overflow-hidden relative text-block block-wrapper prose max-w-none px-4 py-3">
       {renderContent()}
     </div>
   );
