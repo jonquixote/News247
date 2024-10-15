@@ -45,13 +45,13 @@ const ImageBlock = ({ src, alt, caption, isFullPage = false }) => {
 
   return (
     <>
-      <div className="flex justify-center">
+      <div className="flex justify-center py-2">
         <Card className="p-0 overflow-hidden" style={{ width: isFullPage ? `${dimensions.width}px` : 'auto' }}>
           <img 
             ref={imgRef}
             src={src} 
             alt={alt || caption || "Article image"} 
-            className="cursor-pointer w-full h-auto"
+            className="cursor-pointer w-full h-auto max-w-[500px] max-h-[500px]"
             style={isFullPage ? { maxWidth: '500px', maxHeight: '500px' } : {}}
             onClick={() => setIsOpen(true)}
           />

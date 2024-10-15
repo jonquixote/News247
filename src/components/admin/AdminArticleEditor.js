@@ -66,28 +66,30 @@ const ImageBlockEditor = ({ block, index, handleBlockChange }) => {
 
 
   return (
-    <div>
-      <input
-        type="file"
-        accept="image/*"
-        onChange={handleImageChange}
-        className="w-full p-2 border rounded mb-2"
-      />
-      <Input
-        type="text"
-        value={block.caption || ''}
-        onChange={(e) => handleBlockChange(index, 'caption', e.target.value)}
-        placeholder="Image caption (optional)"
-        className="w-full mt-2 mb-2"
-      />
-      <Input
-        type="text"
-        value={block.alt || ''}
-        onChange={(e) => handleBlockChange(index, 'alt', e.target.value)}
-        placeholder="Alt text (optional)"
-        className="w-full mt-2 mb-2"
-      />
-      <div className="mt-2">
+    <div className="flex flex-col items-center w-full">
+      <div className="w-full max-w-[350px]">
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleImageChange}
+          className="w-full p-2 border rounded mb-2"
+        />
+        <Input
+          type="text"
+          value={block.caption || ''}
+          onChange={(e) => handleBlockChange(index, 'caption', e.target.value)}
+          placeholder="Image caption (optional)"
+          className="w-full mt-2 mb-2"
+        />
+        <Input
+          type="text"
+          value={block.alt || ''}
+          onChange={(e) => handleBlockChange(index, 'alt', e.target.value)}
+          placeholder="Alt text (optional)"
+          className="w-full mt-2 mb-2"
+        />
+      </div>
+      <div className="w-full max-w-[350px] mt-2">
         {localImagePreview && (
           <ImageBlock
             src={localImagePreview}
@@ -102,29 +104,31 @@ const ImageBlockEditor = ({ block, index, handleBlockChange }) => {
 
 const VideoBlockEditor = ({ block, index, handleBlockChange }) => {
   return (
-    <div>
-      <input
-        type="file"
-        accept="video/*"
-        onChange={(e) => {
-          const file = e.target.files[0];
-          if (file) {
-            const videoUrl = URL.createObjectURL(file);
-            handleBlockChange(index, 'content', { data: videoUrl, name: file.name, type: file.type });
-            handleBlockChange(index, 'file', file);
-            handleBlockChange(index, 'videoUrl', videoUrl);
-          }
-        }}
-        className="w-full p-2 border rounded mb-2"
-      />
-      <Input
-        type="text"
-        value={block.title || ''}
-        onChange={(e) => handleBlockChange(index, 'title', e.target.value)}
-        placeholder="Video title (optional)"
-        className="w-full mt-2 mb-2"
-      />
-      <div className="mt-2">
+    <div className="flex flex-col items-center w-full">
+      <div className="w-full max-w-[350px]">
+        <input
+          type="file"
+          accept="video/*"
+          onChange={(e) => {
+            const file = e.target.files[0];
+            if (file) {
+              const videoUrl = URL.createObjectURL(file);
+              handleBlockChange(index, 'content', { data: videoUrl, name: file.name, type: file.type });
+              handleBlockChange(index, 'file', file);
+              handleBlockChange(index, 'videoUrl', videoUrl);
+            }
+          }}
+          className="w-full p-2 border rounded mb-2"
+        />
+        <Input
+          type="text"
+          value={block.title || ''}
+          onChange={(e) => handleBlockChange(index, 'title', e.target.value)}
+          placeholder="Video title (optional)"
+          className="w-full mt-2 mb-2"
+        />
+      </div>
+      <div className="w-full h-full max-w-[350px] max-h-[350px] flex justify-center mt-2">
         <VideoCard 
           title={block.title || "Video Preview"}
           src={block.videoUrl || (block.content && block.content.data) || ''}
@@ -169,15 +173,15 @@ const TweetBlockEditor = ({ block, index, handleBlockChange }) => {
   };
 
   return (
-    <div>
+    <div className="flex flex-col items-center w-full">
       <Input
         type="text"
         value={block.content || ''}
         onChange={handleTweetInput}
         placeholder="Enter Tweet ID or URL"
-        className="w-full p-2 border rounded mb-2"
+        className="w-full max-w-[300px] p-2 border rounded mb-2"
       />
-      <div className="mt-2">
+      <div className="w-full max-w-[300px] flex justify-center mt-2">
         {block.content && <TweetBlock tweetId={block.content} />}
       </div>
     </div>
@@ -795,6 +799,21 @@ const AdminArticleEditor = () => {
               <CardHeader>
                 <CardTitle>Preview</CardTitle>
               </CardHeader>
+              <div className="flex flex-col">
+                {article.mainImage && (
+                  <div className="w-screen w-full h-full h-[30vh] overflow-hidden">
+                    <img 
+                      src={article.mainImage} 
+                      alt={article.title}
+                      className="object-cover"
+                    />
+                  </div>
+                )}
+                </div>
+                <div className="flex flex-col justify-center w-full mx-auto px-2 py-2 space-y-0 mb-2">
+                <h1 className="text-4xl font-bold article-content text-center py-2">{article.title}</h1>
+                <p className="text-gray-600 article-content text-center max-w-[400px] px-12">{article.tagline}</p>
+                </div>
               <CardContent className="p-0">
                 <ArticleRenderer blocks={article.content} />
               </CardContent>

@@ -141,7 +141,7 @@ const VideoCard = ({ title, src, bucket, keyName, file }) => {
   }, []);
 
   return (
-    <Card className={`overflow-hidden relative ${isFullscreen ? '' : 'max-w-[500px]'}`} ref={containerRef}>
+    <Card className={`overflow-hidden relative ${isFullscreen ? '' : 'max-w-[500px] max-h-[500px]'}`} ref={containerRef}>
       <div className="relative h-full">
         <div className="absolute top-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 z-10">
           <h2 className="text-xl font-semibold">{title}</h2>
@@ -159,7 +159,7 @@ const VideoCard = ({ title, src, bucket, keyName, file }) => {
           <>
             <video
               ref={videoRef}
-              className={`${isFullscreen ? '' : 'w-full max-w-[500px] h-full object-cover'}`}
+              className={`${isFullscreen ? '' : 'w-full max-w-[500px] h-full max-h-[500px] object-cover'}`}
               src={videoSrc}
               muted={isMuted}
               loop

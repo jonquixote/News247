@@ -52,7 +52,7 @@ const ArticleFullPage = () => {
         return wrapBlock(
           <div className="flex justify-center">
             <VideoCard 
-              title={block.title || "Video"}
+              title={block.title}
               src={block.content}
               bucket={block.videoBucket}
               keyName={block.videoKey}
@@ -80,10 +80,21 @@ const ArticleFullPage = () => {
   }
 
   return (
-    <div className="article-content w-full max-w-[500px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-      <h1 className="text-4xl font-bold mb-4">{article.title}</h1>
-      <p className="text-gray-600 mb-8">{article.tagline}</p>
-      {article.content.map(renderBlock)}
+    <div className="min-h-screen flex flex-col">
+    {article.mainImage && (
+        <div className="w-screen h-[40vh] overflow-hidden">
+          <img 
+            src={article.mainImage} 
+            alt={article.title} 
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+      <div className="article-content w-full max-w-[500px] mx-auto px-4 sm:px-6 lg:px-8 space-y-0">
+        <h1 className="text-4xl font-bold article-content w-full max-w-[500px] mx-auto px-4 sm:px-6 lg:px-8 space-y-0 mb-4">{article.title}</h1>
+        <p className="text-gray-600 article-content w-full max-w-[500px] mx-auto px-4 sm:px-6 lg:px-8 space-y-0 mb-8">{article.tagline}</p>
+        {article.content.map(renderBlock)}
+      </div>
     </div>
   );
 };

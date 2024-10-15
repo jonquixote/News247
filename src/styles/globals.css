@@ -223,7 +223,7 @@ Add this to your CSS file
   width: 100%;
   max-width: 100%;
   margin: 0 auto;
-  padding: 1rem;
+  padding: 0.5rem;
   box-sizing: border-box;
 }
 
