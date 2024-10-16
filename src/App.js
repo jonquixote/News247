@@ -17,6 +17,7 @@ import AdminArticleListPage from './components/admin/AdminArticleListPage'; // I
 import ArticleListPage from './components/ArticleListPage';
 import ArticleFullPage from './components/ArticleFullPage';
 import AdminDashboard from './components/admin/AdminDashboard';
+import AdminHomePageManager from './components/admin/AdminHomePageManager';
 
 const NavMenu = () => {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -84,6 +85,7 @@ const NewsApp = () => {
           <Route path="/articles" element={<ArticleListPage />} />
           <Route path="/article/:id" element={<ArticleFullPage />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/homepage" element={<AdminHomePageManager />} />
           <Route path="/admin/articles" element={<AdminArticleListPage />} /> {/* Add the new route */}
           <Route path="/admin/edit/:id" element={<AdminArticleEditor />} /> {/* Add Edit route */}
           <Route path="/admin/articles/:id" element={<AdminArticleEditor />} />

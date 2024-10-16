@@ -7,7 +7,8 @@ import {
   Users, 
   BarChart2, 
   Settings,
-  PlusCircle
+  PlusCircle,
+  Home
 } from 'lucide-react';
 
 const AdminDashboard = () => {
@@ -26,6 +27,21 @@ const AdminDashboard = () => {
             <p className="mb-4 text-green-600">Start writing a new article for your site.</p>
             <Link to="/admin/articles/new">
               <Button className="bg-green-500 hover:bg-green-600">Create Article</Button>
+            </Link>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Home className="mr-2" />
+              Homepage Manager
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-4">Manage homepage content, including video and carousel images.</p>
+            <Link to="/admin/homepage">
+              <Button>Manage Homepage</Button>
             </Link>
           </CardContent>
         </Card>
