@@ -4,17 +4,25 @@ import Input from '../ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import axios from 'axios';
 import ImageBlock from '../blocks/ImageBlock';
+import { Progress } from '../ui/progress';
+import VideoCard from '../ui/video-card';
 
 const REACT_APP_API_URL = "https://news-backend-delta.vercel.app";
 
 
 const AdminHomePageManager = () => {
   const [videoFile, setVideoFile] = useState(null);
+  const [videoUploadProgress, setVideoUploadProgress] = useState(0);
+  const [currentVideo, setCurrentVideo] = useState(null);
+  const [videoSrc, setVideoSrc] = useState('');
   const [carouselImages, setCarouselImages] = useState([]);
   const [newImage, setNewImage] = useState(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
+  const [imageUploadProgress, setImageUploadProgress] = useState(0);
 
   useEffect(() => {
     fetchCarouselImages();
+    fetchCurrentVideo();
   }, []);
 
   const fetchCarouselImages = async () => {
@@ -23,6 +31,43 @@ const AdminHomePageManager = () => {
       setCarouselImages(response.data);
     } catch (error) {
       console.error('Error fetching carousel images:', error);
+    }
+  };
+
+  const fetchCurrentVideo = async () => {
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/homepage/homepagevideo`);
+      setCurrentVideo(response.data);
+      
+      if (response.data.videoBucket && response.data.videoKey) {
+        try {
+          const urlResponse = await axios.post(`${process.env.REACT_APP_API_URL}/api/getVideoUrl`, {
+            bucket: response.data.videoBucket,
+            key: response.data.videoKey
+          });
+          
+          if (urlResponse.data && urlResponse.data.url) {
+            setVideoSrc(urlResponse.data.url);
+          } else {
+            console.error('Failed to generate video URL');
+          }
+        } catch (err) {
+          console.error('Error fetching video URL:', err);
+        }
+      } else if (response.data.videoUrl) {
+        setVideoSrc(response.data.videoUrl);
+      } else {
+        console.error('No valid video source found in response:', response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching current video:', error);
+    }
+  };
+
+  const handleVideoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setVideoFile(file);
     }
   };
 
@@ -35,13 +80,27 @@ const AdminHomePageManager = () => {
 
     try {
       const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/homepage/homepagevideo`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setVideoUploadProgress(percentCompleted);
+        }
       });
       alert('Video uploaded successfully');
-      console.log('Upload response:', response.data);
+      setVideoFile(null);
+      setVideoUploadProgress(0);
+      fetchCurrentVideo(); // Fetch the updated video information
     } catch (error) {
       console.error('Error uploading video:', error);
       alert('Error uploading video');
+    }
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setNewImage(file);
+      setImagePreviewUrl(URL.createObjectURL(file));
     }
   };
 
@@ -53,10 +112,16 @@ const AdminHomePageManager = () => {
 
     try {
       await axios.post(`${process.env.REACT_APP_API_URL}/api/homepage/carousel-images`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setImageUploadProgress(percentCompleted);
+        }
       });
       fetchCarouselImages();
       setNewImage(null);
+      setImagePreviewUrl(null);
+      setImageUploadProgress(0);
     } catch (error) {
       console.error('Error uploading image:', error);
       alert('Error uploading image');
@@ -91,16 +156,49 @@ const AdminHomePageManager = () => {
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Mantra of the Week Video</CardTitle>
+          <CardTitle>Home Page Video</CardTitle>
         </CardHeader>
         <CardContent>
           <Input 
             type="file" 
             accept="video/*" 
-            onChange={(e) => setVideoFile(e.target.files[0])} 
+            onChange={handleVideoChange}
           />
-          <Button onClick={() => handleVideoUpload(true)} className="mt-2">Upload Video with Timestamp</Button>
-          <Button onClick={handleVideoUpload} className="mt-2">Upload Video</Button>
+          <Button 
+            onClick={() => handleVideoUpload(false)} 
+            className="mt-4 mr-2" 
+            disabled={!videoFile || videoUploadProgress > 0}
+          >
+            {videoUploadProgress > 0 ? `Uploading... ${videoUploadProgress}%` : 'Upload Video (Replace)'}
+          </Button>
+          {/* <Button 
+            onClick={() => handleVideoUpload(true)} 
+            className="mt-4"
+            disabled={!videoFile || videoUploadProgress > 0}
+          >
+            {videoUploadProgress > 0 ? `Uploading... ${videoUploadProgress}%` : 'Upload Video (New)'}
+          </Button> */}
+          {videoUploadProgress > 0 && (
+            <Progress value={videoUploadProgress} className="mt-2" />
+          )}
+          {videoFile && (
+            <div className="mt-4">
+              <h3 className="text-lg font-semibold mb-2">Video Preview:</h3>
+              <VideoCard
+                title=""
+                file={videoFile}
+              />
+            </div>
+          )}
+          {videoSrc && (
+            <div className="mt-6">
+              <h3 className="text-lg font-semibold mb-2">Current Video:</h3>
+              <VideoCard
+                title=""
+                src={videoSrc}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -112,11 +210,26 @@ const AdminHomePageManager = () => {
           <Input 
             type="file" 
             accept="image/*" 
-            onChange={(e) => setNewImage(e.target.files[0])} 
+            onChange={handleImageChange}
           />
-          <Button onClick={handleImageUpload} className="mt-2">Upload Image</Button>
+          <Button onClick={handleImageUpload} className="mt-4" disabled={!newImage || imageUploadProgress > 0}>
+            {imageUploadProgress > 0 ? `Uploading... ${imageUploadProgress}%` : 'Upload Image'}
+          </Button>
+          {imageUploadProgress > 0 && (
+            <Progress value={imageUploadProgress} className="mt-2" />
+          )}
+          {imagePreviewUrl && (
+            <div className="mt-4">
+              <h3 className="text-lg font-semibold mb-2">Preview:</h3>
+              <ImageBlock
+                src={imagePreviewUrl}
+                alt="Image Preview"
+                className="w-full max-w-md h-auto"
+              />
+            </div>
+          )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
             {carouselImages.map((image) => (
               <div key={image._id} className="relative">
                 <ImageBlock

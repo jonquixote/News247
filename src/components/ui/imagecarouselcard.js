@@ -33,11 +33,21 @@ const ImageCarouselCard = ({ title, images }) => {
           </button>
           <div className="flex overflow-hidden h-full"> {/* Ensure overflow container takes full height */}
             <div className="flex-shrink-0 w-full h-full"> {/* Full height for image container */}
-              <img 
-                src={images[currentIndex]} 
-                alt={`Carousel image ${currentIndex + 1}`} 
-                className="w-full h-full object-contain" 
-              />
+              {images && images.length > 0 ? (
+                <img 
+                  src={images[currentIndex]} 
+                  alt={`Carousel image ${currentIndex + 1}`} 
+                  className="w-full h-full object-contain" 
+                  onError={(e) => {
+                    console.error('Error loading image:', images[currentIndex]);
+                    e.target.src = 'path/to/fallback/image.jpg'; // Replace with a fallback image
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-white">
+                  No images available
+                </div>
+              )}
             </div>
           </div>
           <button onClick={nextImage} className="absolute right-0 z-10 p-2 text-white bg-black bg-opacity-50 rounded-full hover:bg-opacity-75">

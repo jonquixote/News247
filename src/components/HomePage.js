@@ -133,26 +133,48 @@ const HomePage = () => {
   const [mainFeaturedArticle, setMainFeaturedArticle] = useState(null);
   const [recentArticles, setRecentArticles] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [videoSrc, setVideoSrc] = useState('');
+  const [carouselImages, setCarouselImages] = useState([]);
   const mainCardRef = useRef(null);
   const stackedCardRef = useRef(null);
 
   useEffect(() => {
-    const fetchArticles = async () => {
+    const fetchData = async () => {
       try {
         setIsLoading(true);
-        const mainFeaturedResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/articles/featured/main`);
-        const recentArticlesResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/articles?limit=6`);
+        const [mainFeaturedResponse, recentArticlesResponse, videoResponse, carouselResponse] = await Promise.all([
+          axios.get(`${process.env.REACT_APP_API_URL}/api/articles/featured/main`),
+          axios.get(`${process.env.REACT_APP_API_URL}/api/articles?limit=6`),
+          axios.get(`${process.env.REACT_APP_API_URL}/api/homepage/homepagevideo`),
+          axios.get(`${process.env.REACT_APP_API_URL}/api/homepage/carousel-images`)
+        ]);
         
         setMainFeaturedArticle(mainFeaturedResponse.data);
         setRecentArticles(recentArticlesResponse.data);
+        
+        if (videoResponse.data.videoBucket && videoResponse.data.videoKey) {
+          const urlResponse = await axios.post(`${process.env.REACT_APP_API_URL}/api/getVideoUrl`, {
+            bucket: videoResponse.data.videoBucket,
+            key: videoResponse.data.videoKey
+          });
+          if (urlResponse.data && urlResponse.data.url) {
+            setVideoSrc(urlResponse.data.url);
+          }
+        }
+        
+        const processedImages = carouselResponse.data.map(img => 
+          `data:${img.contentType};base64,${arrayBufferToBase64(img.data.data)}`
+        );
+        console.log('Processed carousel images:', processedImages);
+        setCarouselImages(processedImages);
       } catch (error) {
-        console.error('Error fetching articles:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchArticles();
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -244,13 +266,13 @@ const HomePage = () => {
       {/* Home Page Memes Section */}
       <section className="my-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="h-[400px]"> {/* Fixed height */}
+          <div className="h-[400px]">
             <VideoCard
               title="Mantra Of The Week"
-              videoSrc={newsVideo4}
+              src={videoSrc}
             />
           </div>
-          <div className="md:col-span-2 h-[400px]"> {/* Fixed height */}
+          <div className="md:col-span-2 h-[400px]">
             <ImageCarouselCard
               title="Memes of the Day"
               images={carouselImages}
@@ -302,6 +324,16 @@ const HomePage = () => {
       </section>
     </main>
   );
+};
+
+const arrayBufferToBase64 = (buffer) => {
+  let binary = '';
+  const bytes = new Uint8Array(buffer);
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return window.btoa(binary);
 };
 
 export default HomePage;
