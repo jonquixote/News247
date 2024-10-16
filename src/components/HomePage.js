@@ -102,29 +102,58 @@ const ShimmerLoader = () => (
 );
 
 const FeaturedCardLoader = () => (
-  <Card className="h-full overflow-hidden rounded-lg relative">
+  <Card className="h-full w-full overflow-hidden rounded-lg relative">
     <ShimmerLoader />
     <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black to-transparent">
-      <div className="h-12 bg-gray-300 rounded w-3/4 mb-2"></div>
+      <div className="h-8 sm:h-12 bg-gray-300 rounded w-3/4 mb-2"></div>
       <div className="h-4 bg-gray-300 rounded w-1/2"></div>
     </div>
   </Card>
 );
 
 const StackedCardLoader = () => (
-  <Card className="h-full flex flex-col overflow-hidden">
+  <Card className="h-full w-full flex flex-col overflow-hidden">
     {[1, 2, 3].map((index) => (
       <div key={index} className="flex-1 border-b border-gray-200 last:border-b-0 relative">
         <ShimmerLoader />
         <div className="flex h-full relative z-10">
           <div className="w-1/3 bg-gray-300"></div>
           <div className="w-2/3 p-2 flex flex-col justify-center">
-            <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
-            <div className="h-3 bg-gray-300 rounded w-1/2"></div>
+            <div className="h-3 sm:h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+            <div className="h-2 sm:h-3 bg-gray-300 rounded w-1/2"></div>
           </div>
         </div>
       </div>
     ))}
+  </Card>
+);
+
+const VideoCardLoader = () => (
+  <Card className="h-full w-full overflow-hidden rounded-lg relative">
+    <ShimmerLoader />
+    <div className="absolute top-0 left-0 right-0 p-2 bg-black bg-opacity-20">
+      <div className="h-3 sm:h-4 bg-gray-300 rounded w-1/2"></div>
+    </div>
+    <div className="absolute inset-0 flex items-center justify-center">
+      <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-300 rounded-full flex items-center justify-center">
+        <div className="w-0 h-0 border-t-8 border-t-transparent border-l-12 border-l-gray-400 border-b-8 border-b-transparent ml-1"></div>
+      </div>
+    </div>
+  </Card>
+);
+
+const ImageCarouselLoader = () => (
+  <Card className="h-full w-full overflow-hidden rounded-lg relative">
+    <ShimmerLoader />
+    <div className="absolute top-0 left-0 right-0 p-2 bg-black bg-opacity-20">
+      <div className="h-3 sm:h-4 bg-gray-300 rounded w-1/2"></div>
+    </div>
+    <div className="absolute inset-y-0 left-0 flex items-center">
+      <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-300 rounded-full ml-2"></div>
+    </div>
+    <div className="absolute inset-y-0 right-0 flex items-center">
+      <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-300 rounded-full mr-2"></div>
+    </div>
   </Card>
 );
 
@@ -199,11 +228,11 @@ const HomePage = () => {
     .slice(0, 3);
 
   return (
-    <main className="flex-grow container mx-auto px-4 py-4">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8">
       {/* Featured Articles Section */}
-      <section className="mb-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <div className="md:col-span-2" ref={mainCardRef}>
+      <section className="my-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 h-[400px] md:h-[300px] lg:h-[400px]">
             {isLoading ? (
               <FeaturedCardLoader />
             ) : mainFeaturedArticle ? (
@@ -224,8 +253,7 @@ const HomePage = () => {
               </Card>
             )}
           </div>
-          {/* Stacked Featured Articles Section */}
-          <div ref={stackedCardRef}>
+          <div className="h-[400px] md:h-[300px] lg:h-[400px]">
             {isLoading ? (
               <StackedCardLoader />
             ) : (
@@ -266,17 +294,25 @@ const HomePage = () => {
       {/* Home Page Memes Section */}
       <section className="my-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="h-[400px]">
-            <VideoCard
-              title="Mantra Of The Week"
-              src={videoSrc}
-            />
+          <div className="h-[400px] md:h-[300px] lg:h-[400px]">
+            {isLoading ? (
+              <VideoCardLoader />
+            ) : (
+              <VideoCard
+                title="Mantra Of The Week"
+                src={videoSrc}
+              />
+            )}
           </div>
-          <div className="md:col-span-2 h-[400px]">
-            <ImageCarouselCard
-              title="Memes of the Day"
-              images={carouselImages}
-            />
+          <div className="md:col-span-2 h-[400px] md:h-[300px] lg:h-[400px]">
+            {isLoading ? (
+              <ImageCarouselLoader />
+            ) : (
+              <ImageCarouselCard
+                title="Memes of the Day"
+                images={carouselImages}
+              />
+            )}
           </div>
         </div>
       </section>
@@ -322,7 +358,7 @@ const HomePage = () => {
           ))}
         </div>
       </section>
-    </main>
+    </div>
   );
 };
 

@@ -31,13 +31,13 @@ const ImageCarouselCard = ({ title, images }) => {
           <button onClick={prevImage} className="absolute left-0 z-10 p-2 text-white bg-black bg-opacity-50 rounded-full hover:bg-opacity-75">
             <ChevronLeft className="h-6 w-6" />
           </button>
-          <div className="flex overflow-hidden h-full"> {/* Ensure overflow container takes full height */}
-            <div className="flex-shrink-0 w-full h-full"> {/* Full height for image container */}
+          <div className="flex overflow-hidden h-full w-full"> {/* Ensure overflow container takes full height */}
+            <div className="flex-shrink-0 w-full h-full flex items-center justify-center"> {/* Full height for image container */}
               {images && images.length > 0 ? (
                 <img 
                   src={images[currentIndex]} 
                   alt={`Carousel image ${currentIndex + 1}`} 
-                  className="w-full h-full object-contain" 
+                  className="max-w-full max-h-full w-auto h-auto object-contain" 
                   onError={(e) => {
                     console.error('Error loading image:', images[currentIndex]);
                     e.target.src = 'path/to/fallback/image.jpg'; // Replace with a fallback image
