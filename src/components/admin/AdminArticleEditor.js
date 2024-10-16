@@ -15,6 +15,7 @@ import ErrorBoundary from '../ErrorBoundary';
 import TextBlock from '../blocks/TextBlock';
 import ImageBlock from '../blocks/ImageBlock';
 import TweetBlock from '../blocks/TweetBlock';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../ui/dialog";
 
 const BlockTypes = {
   TEXT: 'text',
@@ -211,6 +212,13 @@ const AdminArticleEditor = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [blocks, setBlocks] = useState([]);  // Ensure this is initialized as an empty array
 
+  const onDeleteBlock = useCallback((index) => {
+    setArticle(prevArticle => ({
+      ...prevArticle,
+      content: prevArticle.content.filter((_, i) => i !== index)
+    }));
+  }, []);
+
   useEffect(() => {
     if (id) {
       // Fetch the existing article for editing
@@ -360,12 +368,12 @@ const AdminArticleEditor = () => {
     });
   };
 
-  const deleteBlock = (indexToDelete) => {
+  const deleteBlock = useCallback((indexToDelete) => {
     setArticle(prevArticle => ({
       ...prevArticle,
       content: prevArticle.content.filter((_, index) => index !== indexToDelete)
     }));
-  };
+  }, []);
 
   const onDragEnd = useCallback((result) => {
     if (!result.destination) {
@@ -756,6 +764,7 @@ const AdminArticleEditor = () => {
                         article={article} 
                         renderBlockContent={(block, index) => renderBlockContent(block, index)}
                         updateBlock={handleBlockChange}
+                        onDeleteBlock={deleteBlock}
                       />
                     ) : (
                       <div>Loading drag and drop functionality...</div>

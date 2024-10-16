@@ -80,9 +80,9 @@ const ArticleFullPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-    {article.mainImage && (
-        <div className="w-screen h-[40vh] overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center">
+      {article.mainImage && (
+        <div className="w-full h-[40vh] overflow-hidden">
           <img 
             src={article.mainImage} 
             alt={article.title} 
@@ -90,9 +90,11 @@ const ArticleFullPage = () => {
           />
         </div>
       )}
-      <div className="article-content w-full max-w-[500px] mx-auto px-4 sm:px-6 lg:px-8 space-y-0">
-        <h1 className="text-4xl font-bold article-content w-full max-w-[500px] mx-auto px-4 sm:px-6 lg:px-8 space-y-0 mb-4">{article.title}</h1>
-        <p className="text-gray-600 article-content w-full max-w-[500px] mx-auto px-4 sm:px-6 lg:px-8 space-y-0 mb-8">{article.tagline}</p>
+      <div className="article-content w-full max-w-[500px] px-4 py-4 sm:px-6 lg:px-8 space-y-0">
+        <h1 className="text-4xl font-bold text-center mb-2">{article.title}</h1>
+        <p className="text-gray-600 text-center max-w-[400px] mx-auto mb-2">
+          {article.tagline}
+        </p>
         {article.content.map(renderBlock)}
       </div>
     </div>

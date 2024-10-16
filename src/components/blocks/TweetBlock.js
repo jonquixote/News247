@@ -13,7 +13,7 @@ const TweetBlock = ({ tweetId }) => {
 
   return (
     <div className="tweet-block-wrapper w-full max-w-full overflow-hidden my-1">
-      <div className="twitter-tweet-embed-container" style={{ maxWidth: '550px', margin: '0 auto' }}>
+      <div className="twitter-tweet-embed-container" style={{ maxWidth: '400px', margin: '0 auto' }}>
         <TwitterTweetEmbed tweetId={tweetId} />
       </div>
     </div>

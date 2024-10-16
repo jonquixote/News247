@@ -16,6 +16,7 @@ import AdminArticleEditor from './components/admin/AdminArticleEditor';
 import AdminArticleListPage from './components/admin/AdminArticleListPage'; // Import the new component
 import ArticleListPage from './components/ArticleListPage';
 import ArticleFullPage from './components/ArticleFullPage';
+import AdminDashboard from './components/admin/AdminDashboard';
 
 const NavMenu = () => {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -39,10 +40,13 @@ const NavMenu = () => {
           <Link to="/articles" className="w-full">All Articles</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild onClick={closeMenu}>
+          <Link to="/admin" className="w-full">Admin Dashboard</Link> {/* Add link to Admin Article List */}
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild onClick={closeMenu}>
           <Link to="/admin/articles" className="w-full">Admin Article List</Link> {/* Add link to Admin Article List */}
         </DropdownMenuItem>
         <DropdownMenuItem asChild onClick={closeMenu}>
-          <Link to="/admin" className="w-full">Create New Article</Link> {/* Updated Admin Create route */}
+          <Link to="/admin/articles/new" className="w-full">Create New Article</Link> {/* Updated Admin Create route */}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={closeMenu}>About</DropdownMenuItem>
         <DropdownMenuItem onClick={closeMenu}>Contact</DropdownMenuItem>
@@ -79,7 +83,7 @@ const NewsApp = () => {
           <Route path="/" element={<HomePage />} />
           <Route path="/articles" element={<ArticleListPage />} />
           <Route path="/article/:id" element={<ArticleFullPage />} />
-          <Route path="/admin" element={<AdminArticleEditor />} />
+          <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/articles" element={<AdminArticleListPage />} /> {/* Add the new route */}
           <Route path="/admin/edit/:id" element={<AdminArticleEditor />} /> {/* Add Edit route */}
           <Route path="/admin/articles/:id" element={<AdminArticleEditor />} />
