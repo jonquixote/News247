@@ -4,24 +4,32 @@ import axios from 'axios';
 import TextBlock from './blocks/TextBlock';
 import ImageBlock from './blocks/ImageBlock';
 import VideoCard from './ui/video-card';
-import TweetBlock from './blocks/TweetBlock';  // Import the TweetBlock component
+import TweetBlock from './blocks/TweetBlock';
 import { TwitterTweetEmbed } from 'react-twitter-embed';
 
 const REACT_APP_API_URL = "https://news-backend-delta.vercel.app";
+
+const ShimmerLoader = () => (
+  <div className="animate-pulse bg-gray-200 h-full w-full"></div>
+);
 
 const ArticleFullPage = () => {
   const { id } = useParams();
   const [article, setArticle] = useState(null);
   const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchArticle = async () => {
       try {
+        setIsLoading(true);
         const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/articles/${id}`);
         setArticle(response.data);
       } catch (error) {
         console.error("Error fetching article:", error);
         setError("Failed to load article.");
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -75,8 +83,30 @@ const ArticleFullPage = () => {
     return <div className="text-red-500">{error}</div>;
   }
 
-  if (!article) {
-    return <div>Loading...</div>;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center">
+        <div className="w-full h-[40vh] overflow-hidden">
+          <ShimmerLoader />
+        </div>
+        <div className="article-content w-full max-w-[500px] px-4 py-4 sm:px-6 lg:px-8 space-y-4">
+          <div className="h-8 w-3/4 mx-auto">
+            <ShimmerLoader />
+          </div>
+          <div className="h-4 w-1/2 mx-auto">
+            <ShimmerLoader />
+          </div>
+          <div className="h-4 w-2/3 mx-auto">
+            <ShimmerLoader />
+          </div>
+          {[1, 2, 3].map((_, index) => (
+            <div key={index} className="h-20 w-full">
+              <ShimmerLoader />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -91,7 +121,10 @@ const ArticleFullPage = () => {
         </div>
       )}
       <div className="article-content w-full max-w-[500px] px-4 py-4 sm:px-6 lg:px-8 space-y-0">
-        <h1 className="text-4xl font-bold text-center mb-2">{article.title}</h1>
+        <h1 className="text-4xl marginBlockEnd-0 font-bold text-center">{article.title}</h1>
+        <p className="text-gray-400 text-xs text-center max-w-[400px] mx-auto mb-2">
+          By {article.author}
+        </p>
         <p className="text-gray-600 text-center max-w-[400px] mx-auto mb-2">
           {article.tagline}
         </p>
