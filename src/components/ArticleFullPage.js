@@ -63,6 +63,7 @@ const ArticleFullPage = () => {
             )}
         </div>
       );
+      case 'video':
         return wrapBlock(
           <div className="flex justify-center py-4">
             <VideoCard 
