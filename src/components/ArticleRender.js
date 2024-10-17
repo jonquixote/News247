@@ -78,12 +78,19 @@ const BlockRenderer = ({ block, index }) => {
         return <LoadingBlock key={`image-loading-${block.id || index}`} type="image" />;
       }
       return (
-        <ImageBlock
-          key={`image-${block.id || index}`}
-          src={typeof block.content === 'object' && block.content.data ? block.content.data : block.content}
-          alt={block.alt || 'Image'}
-          caption={block.caption}
-        />
+        <div className="flex flex-col items-center">
+          <ImageBlock
+            key={`image-${block.id || index}`}
+            src={typeof block.content === 'object' && block.content.data ? block.content.data : block.content}
+            alt={block.alt || 'Image'}
+            caption={block.caption}
+          />
+          {block.caption && (
+            <p className="text-sm text-gray-600 mt-2 text-center">
+              {block.caption}
+            </p>
+          )}
+        </div>
       );
     case 'video':
       console.log('Video block data:', block);

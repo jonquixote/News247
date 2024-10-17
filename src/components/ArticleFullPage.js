@@ -49,14 +49,20 @@ const ArticleFullPage = () => {
         return wrapBlock(<TextBlock content={block.content} />);
       case 'image':
         return wrapBlock(
-          <ImageBlock
-            src={block.content}
-            alt={block.alt}
-            caption={block.caption}
-            isFullPage={true}
-          />
-        );
-      case 'video':
+          <div className="flex flex-col items-center">
+            <ImageBlock
+              src={block.content}
+              alt={block.alt}
+              caption={block.caption}
+              isFullPage={true}
+            />
+            {block.caption && (
+              <p className="text-sm text-gray-600 mt-2 text-center">
+                {block.caption}
+              </p>
+            )}
+        </div>
+      );
         return wrapBlock(
           <div className="flex justify-center py-4">
             <VideoCard 
@@ -122,11 +128,11 @@ const ArticleFullPage = () => {
       )}
       <div className="article-content w-full max-w-[500px] px-4 py-4 sm:px-6 lg:px-8 space-y-0">
         <h1 className="text-4xl marginBlockEnd-0 font-bold text-center">{article.title}</h1>
-        <p className="text-gray-400 text-xs text-center max-w-[400px] mx-auto mb-2">
-          By {article.author}
-        </p>
         <p className="text-gray-600 text-center max-w-[400px] mx-auto mb-2">
           {article.tagline}
+        </p>
+        <p className="text-gray-400 text-xs text-center max-w-[400px] mx-auto mb-2">
+          By {article.author}
         </p>
         {article.content.map(renderBlock)}
       </div>

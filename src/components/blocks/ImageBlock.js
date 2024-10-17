@@ -57,7 +57,6 @@ const ImageBlock = ({ src, alt, caption, isFullPage = false }) => {
           />
         </Card>
       </div>
-      {caption && <p className="text-center text-sm text-gray-600 mt-2">{caption}</p>}
       <Dialog open={isOpen} onClose={() => setIsOpen(false)} className="relative z-50">
         <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
         <div className="fixed inset-0 flex items-center justify-center p-4">
