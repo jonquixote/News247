@@ -5,8 +5,6 @@ import newsImage4 from '../media/newsImage4.jpg';
 import newsImage5 from '../media/newsImage5.jpg';
 import newsImage6 from '../media/newsImage6.jpg';
 import newsVideo1 from '../media/video1.mp4';
-import newsVideo2 from '../media/video2.mp4';
-import newsVideo3 from '../media/video3.MP4';
 import newsVideo4 from '../media/video4.mp4';
 import newsVideo5 from '../media/video5.mp4';
 
@@ -28,7 +26,6 @@ const newsArticles = [
       author: "Johnny", 
       date: "2024-10-05",
       image: newsImage3,
-      video: newsVideo3
     },
     { 
       id: 3,
@@ -47,7 +44,6 @@ const newsArticles = [
       author: "Johnny", 
       date: "2024-10-04",
       image: newsImage4,
-      video: newsVideo2
     },
     { 
       id: 5, 

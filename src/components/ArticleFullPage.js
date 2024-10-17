@@ -58,7 +58,7 @@ const ArticleFullPage = () => {
         );
       case 'video':
         return wrapBlock(
-          <div className="flex justify-center">
+          <div className="flex justify-center py-4">
             <VideoCard 
               title={block.title}
               src={block.content}
